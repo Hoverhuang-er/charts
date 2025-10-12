@@ -1,0 +1,40 @@
+# Copyright Broadcom, Inc. All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+
+---
+header:
+  # License format for Helm templates
+  - comment: on-failure
+    license:
+      spdx-id: Apache-2.0
+      copyright-owner: Copyright Hover Huang All Rights Reserved.
+
+      content: |
+        {{- /*
+        Copyright Hover Huang All Rights Reserved.
+        SPDX-License-Identifier: APACHE-2.0
+        */}}
+
+    paths:
+      - "Microsoft/**/templates/**/*.yml"
+      - "Microsoft/**/templates/**/*.yaml"
+    paths-ignore:
+      - "Microsoft/**/templates/crds/**/*.yml"
+      - "Microsoft/**/templates/crds/**/*.yaml"
+
+  # License format for all other YAML files
+  - comment: on-failure
+    license:
+      spdx-id: Apache-2.0
+      copyright-owner: Copyright Hover Huang. All Rights Reserved.
+
+      content: |
+        # Copyright Hover Huang. All Rights Reserved.
+        # SPDX-License-Identifier: APACHE-2.0
+
+    paths:
+      - "Microsoft/**/*.yml"
+      - "Microsoft/**/*.yaml"
+    paths-ignore:
+      - "Microsoft/**/templates/**/*.yml"
+      - "Microsoft/**/templates/**/*.yaml"

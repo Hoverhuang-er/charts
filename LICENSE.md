@@ -1,3 +1,6 @@
+This product includes third-party open source software. Additional copyright and licensing information can be found inside the packages themselves and/or at https://github.com/Hoverhuang-er
+
+----
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
