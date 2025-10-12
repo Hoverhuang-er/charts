@@ -2,6 +2,7 @@
 
 # Helm Charts Collection
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/azure-ai-services)](https://artifacthub.io/packages/search?repo=azure-ai-services)
+![Python Versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
 
 Curated Helm charts maintained in this repository, ready to deploy to any Kubernetes cluster using [Helm](https://github.com/helm/helm).
 
