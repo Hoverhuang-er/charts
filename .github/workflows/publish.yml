@@ -72,3 +72,56 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GHTOKEN }}
+
+      - name: Update Helm Repository Index
+        run: |
+          # Copy packaged charts to a temporary location for indexing
+          mkdir -p helm-repo
+          cp dist/*.tgz helm-repo/ 2>/dev/null || true
+          cp artifacthub-repo.yml helm-repo/
+          
+          # Generate index.yaml
+          cd helm-repo
+          helm repo index . --url https://hoverhuang-er.github.io/charts/
+          
+          echo "Generated index.yaml:"
+          cat index.yaml
+
+      - name: Deploy to GitHub Pages
+        if: steps.tag_info.outputs.is_tag == 'true'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GHTOKEN }}
+          publish_dir: ./helm-repo
+          publish_branch: gh-pages
+          force_orphan: true
+
+      - name: Sync with ArtifactHub
+        if: steps.tag_info.outputs.is_tag == 'true'
+        continue-on-error: true
+        run: |
+          echo "Syncing repository with ArtifactHub..."
+          
+          # Register or update repository on ArtifactHub
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://artifacthub.io/api/v1/repositories \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key-ID: ${{ secrets.ARTIFACTHUB_API_KEY }}" \
+            -H "X-API-Key-Secret: ${{ secrets.ARTIFACTHUB_API_SEC }}" \
+            -d '{
+              "name": "hoverhuang-er-charts",
+              "display_name": "Helm Charts Collection",
+              "url": "https://hoverhuang-er.github.io/charts/",
+              "kind": 0,
+              "repository_id": "hoverhuang-er-charts"
+            }')
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 200 ]; then
+            echo "✓ Successfully registered/updated repository on ArtifactHub"
+          elif [ "$HTTP_CODE" -eq 409 ]; then
+            echo "✓ Repository already exists on ArtifactHub"
+          else
+            echo "⚠ ArtifactHub sync returned HTTP $HTTP_CODE: $BODY"
+          fi
