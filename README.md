@@ -1,6 +1,7 @@
 <!-- markdownlint-disable MD041 -->
 
 # Helm Charts Collection
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/azure-ai-services)](https://artifacthub.io/packages/search?repo=azure-ai-services)
 
 Curated Helm charts maintained in this repository, ready to deploy to any Kubernetes cluster using [Helm](https://github.com/helm/helm).
 
