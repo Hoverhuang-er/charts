@@ -31,5 +31,10 @@ for chart_path in "${CHART_DIR}"/*; do
     helm push "${package_path}" "oci://${REGISTRY_HOST}/${REGISTRY_NAMESPACE}"
 done
 
-echo "\nCleaning packaged archives"
-find "${PACKAGE_DIR}" -name '*.tgz' -delete
+# Keep .tgz files for GitHub Release uploads when running from a tag
+if [[ "${IS_TAG:-false}" != "true" ]]; then
+    echo "\nCleaning packaged archives"
+    find "${PACKAGE_DIR}" -name '*.tgz' -delete
+else
+    echo "\nKeeping packaged archives for GitHub Release"
+fi

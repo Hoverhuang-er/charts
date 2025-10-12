@@ -5,13 +5,9 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'charts/**'
-      - 'publishv2.sh'
-      - '.github/workflows/publish.yml'
     tags:
-      - 'v*.*.*'
-      - '*-v*.*.*'
+      - 'v*'
+      - '*-v*'
 
 permissions:
   contents: write
@@ -52,9 +48,9 @@ jobs:
 
       - name: Authenticate to GHCR for Helm
         run: |
-          helm registry login ghcr.io \
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io \
             --username "${{ github.actor }}" \
-            --password "${{ secrets.GHTOKEN }}"
+            --password-stdin
 
       - name: Package and publish charts to GHCR
         run: |
@@ -75,4 +71,4 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GHTOKEN: ${{ secrets.GHTOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
