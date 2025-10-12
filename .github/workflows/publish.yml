@@ -96,32 +96,38 @@ jobs:
           publish_branch: gh-pages
           force_orphan: true
 
-      - name: Sync with ArtifactHub
+      - name: Trigger ArtifactHub Repository Scan
         if: steps.tag_info.outputs.is_tag == 'true'
         continue-on-error: true
         run: |
-          echo "Syncing repository with ArtifactHub..."
+          echo "🔄 Triggering ArtifactHub repository scan..."
+          echo "Repository ID: 3f23160a-c6e3-4a58-b5e4-a04c3fd1dac8"
+          echo "Tag: ${{ steps.tag_info.outputs.tag_name }}"
+          echo ""
           
-          # Register or update repository on ArtifactHub
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://artifacthub.io/api/v1/repositories \
-            -H "Content-Type: application/json" \
+          # Trigger repository scan/refresh on ArtifactHub
+          # Using the correct repository UUID
+          REPO_ID="3f23160a-c6e3-4a58-b5e4-a04c3fd1dac8"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "https://artifacthub.io/api/v1/repositories/${REPO_ID}/scan" \
             -H "X-API-Key-ID: ${{ secrets.ARTIFACTHUB_API_KEY }}" \
-            -H "X-API-Key-Secret: ${{ secrets.ARTIFACTHUB_API_SEC }}" \
-            -d '{
-              "name": "hoverhuang-er-charts",
-              "display_name": "Helm Charts Collection",
-              "url": "https://hoverhuang-er.github.io/charts/",
-              "kind": 0,
-              "repository_id": "hoverhuang-er-charts"
-            }')
+            -H "X-API-Key-Secret: ${{ secrets.ARTIFACTHUB_API_SEC }}")
           
           HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
           BODY=$(echo "$RESPONSE" | sed '$d')
           
-          if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 200 ]; then
-            echo "✓ Successfully registered/updated repository on ArtifactHub"
-          elif [ "$HTTP_CODE" -eq 409 ]; then
-            echo "✓ Repository already exists on ArtifactHub"
+          echo "API Response: HTTP ${HTTP_CODE}"
+          if [[ -n "${BODY}" ]]; then
+            echo "Response body: ${BODY}"
+          fi
+          echo ""
+          
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 202 ] || [ "$HTTP_CODE" -eq 204 ]; then
+            echo "✅ Successfully triggered ArtifactHub repository scan"
+            echo "Charts from tag ${{ steps.tag_info.outputs.tag_name }} will be available on ArtifactHub shortly"
+            echo "View at: https://artifacthub.io/packages/search?org=azure-ai-service"
           else
-            echo "⚠ ArtifactHub sync returned HTTP $HTTP_CODE: $BODY"
+            echo "⚠️  ArtifactHub scan trigger returned HTTP ${HTTP_CODE}"
+            echo "The repository may still update automatically within 30 minutes"
           fi
