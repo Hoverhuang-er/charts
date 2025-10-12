@@ -1,6 +1,6 @@
 # Azure AI Document Intelligent Helm Chart
 
-**语言：** [English](README.md) | [简体中文](README.zh-CN.md)
+**语言：** [English](README.md) | [简体中文](README.zh-CN.md) | [国内访问](https://kcntz7ffdm6b.feishu.cn/wiki/U0KNwlUPyiLTCFkkP3QcFitlngg)
 
 此 Helm Chart 用于在 Kubernetes 上以离线（断开连接）模式部署 Azure AI 文档智能容器。
 

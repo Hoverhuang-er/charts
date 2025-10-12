@@ -1,6 +1,7 @@
 # Azure AI Document Intelligence Helm Chart
 
-**Language:** [English](README.md) | [简体中文](README.zh-CN.md)
+**Language:** [English](README.md) | [简体中文](README.zh-CN.md) | [国内访问](https://kcntz7ffdm6b.feishu.cn/wiki/U0KNwlUPyiLTCFkkP3QcFitlngg)
+
 
 This Helm chart deploys Azure AI Document Intelligence containers in disconnected (offline) environments on Kubernetes.
 
