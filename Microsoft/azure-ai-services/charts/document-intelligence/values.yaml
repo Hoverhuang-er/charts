@@ -1,17 +1,64 @@
-# Default values for azure-ai-services.
+# Default values for document-intelligence.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
+# Kubernetes version compatibility
+# Supported versions: 1.32, 1.28, 1.26, 1.24, pre-1.24
+# Note: pre-1.24 versions will have securityContext disabled
+kubernetesVersion: "1.32"
+
+# Azure AI Document Intelligence container configuration
+documentIntelligence:
+  # Container model type: layout, invoice, receipt, businessCard, idDocument, generalDocument, customTemplate
+  modelType: layout
+  
+  # Azure configuration (required for initial license download)
+  azure:
+    # Billing endpoint from Azure portal (e.g., https://your-resource.cognitiveservices.azure.com)
+    billingEndpoint: ""
+    # API key from Azure portal
+    apiKey: ""
+    # Set to true to download license file (only needed once)
+    downloadLicense: false
+  
+  # License configuration
+  license:
+    # Path where license will be stored
+    mountPath: /license
+    # Existing PVC name for license storage (optional, will create if not specified)
+    existingClaim: ""
+    # Storage size for license PVC
+    storageSize: 1Gi
+    storageClassName: ""
+  
+  # Output logs configuration
+  output:
+    # Path where usage logs will be stored
+    mountPath: /logs
+    # Existing PVC name for output storage (optional, will create if not specified)
+    existingClaim: ""
+    # Storage size for output PVC
+    storageSize: 5Gi
+    storageClassName: ""
+  
+  # Shared storage configuration (for multi-container setups)
+  shared:
+    enabled: false
+    mountPath: /share
+    existingClaim: ""
+    storageSize: 10Gi
+    storageClassName: ""
+
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: nginx
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -54,46 +101,63 @@ service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+  port: 5000
+  targetPort: 5000
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
-  enabled: false
+  enabled: true
+  # Ingress controller type: azure-loadbalancer, application-gateway, nginx
+  # azure-loadbalancer: Azure Load Balancer (default)
+  # application-gateway: Azure Application Gateway Ingress Controller (AGIC)
+  # nginx: NGINX Ingress Controller
+  controllerType: azure-loadbalancer
   className: ""
-  annotations: {}
+  annotations:
+    # Azure Load Balancer annotations (default)
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+    # Uncomment for Application Gateway Ingress Controller
+    # kubernetes.io/ingress.class: azure/application-gateway
+    # appgw.ingress.kubernetes.io/backend-path-prefix: "/"
+    # Uncomment for NGINX Ingress Controller
     # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+    # nginx.ingress.kubernetes.io/rewrite-target: /
   hosts:
-    - host: chart-example.local
+    - host: document-intelligence.example.com
       paths:
         - path: /
-          pathType: ImplementationSpecific
+          pathType: Prefix
   tls: []
-  #  - secretName: chart-example-tls
+  #  - secretName: document-intelligence-tls
   #    hosts:
-  #      - chart-example.local
+  #      - document-intelligence.example.com
 
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+# Resource requirements based on Azure AI Document Intelligence specifications
+# Minimum requirements for layout model: 8 cores, 16GB memory
+# Recommended: 8 cores, 24GB memory
+resources:
+  limits:
+    cpu: "8"
+    memory: 24Gi
+  requests:
+    cpu: "8"
+    memory: 16Gi
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /status
+    port: 5000
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 5
 readinessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /status
+    port: 5000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of replicas"
+    },
+    "kubernetesVersion": {
+      "type": "string",
+      "enum": ["1.32", "1.28", "1.26", "1.24", "pre-1.24"],
+      "description": "Kubernetes version for compatibility (pre-1.24 disables securityContext)"
+    },
+    "documentIntelligence": {
+      "type": "object",
+      "properties": {
+        "modelType": {
+          "type": "string",
+          "enum": ["layout", "invoice", "receipt", "businessCard", "idDocument", "generalDocument", "customTemplate"],
+          "description": "Document Intelligence model type"
+        },
+        "azure": {
+          "type": "object",
+          "properties": {
+            "billingEndpoint": {
+              "type": "string",
+              "description": "Azure billing endpoint URL"
+            },
+            "apiKey": {
+              "type": "string",
+              "description": "Azure API key"
+            },
+            "downloadLicense": {
+              "type": "boolean",
+              "description": "Enable license download mode"
+            }
+          }
+        },
+        "license": {
+          "type": "object",
+          "properties": {
+            "mountPath": {
+              "type": "string",
+              "description": "License mount path"
+            },
+            "existingClaim": {
+              "type": "string",
+              "description": "Existing PVC for license"
+            },
+            "storageSize": {
+              "type": "string",
+              "description": "Storage size for license PVC"
+            },
+            "storageClassName": {
+              "type": "string",
+              "description": "Storage class name"
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "mountPath": {
+              "type": "string",
+              "description": "Output logs mount path"
+            },
+            "existingClaim": {
+              "type": "string",
+              "description": "Existing PVC for output"
+            },
+            "storageSize": {
+              "type": "string",
+              "description": "Storage size for output PVC"
+            },
+            "storageClassName": {
+              "type": "string",
+              "description": "Storage class name"
+            }
+          }
+        },
+        "shared": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable shared storage for multi-container setups"
+            },
+            "mountPath": {
+              "type": "string",
+              "description": "Shared storage mount path"
+            },
+            "existingClaim": {
+              "type": "string",
+              "description": "Existing PVC for shared storage"
+            },
+            "storageSize": {
+              "type": "string",
+              "description": "Storage size for shared PVC"
+            },
+            "storageClassName": {
+              "type": "string",
+              "description": "Storage class name"
+            }
+          }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Container image repository"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Image pull policy"
+        },
+        "tag": {
+          "type": "string",
+          "description": "Image tag"
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable ingress"
+        },
+        "controllerType": {
+          "type": "string",
+          "enum": ["azure-loadbalancer", "application-gateway", "nginx"],
+          "description": "Ingress controller type"
+        },
+        "className": {
+          "type": "string",
+          "description": "Ingress class name"
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Ingress annotations"
+        },
+        "hosts": {
+          "type": "array",
+          "description": "Ingress hosts"
+        },
+        "tls": {
+          "type": "array",
+          "description": "TLS configuration"
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+          "description": "Service type"
+        },
+        "port": {
+          "type": "integer",
+          "description": "Service port"
+        },
+        "targetPort": {
+          "type": "integer",
+          "description": "Container target port"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource requests and limits"
+    }
+  }
+}

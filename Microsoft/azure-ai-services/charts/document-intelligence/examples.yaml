@@ -1,0 +1,238 @@
+# Example 1: Initial setup with license download
+# Use this for first-time deployment to download the license file
+
+kubernetesVersion: "1.32"
+
+documentIntelligence:
+  modelType: layout
+  azure:
+    billingEndpoint: "https://your-resource.cognitiveservices.azure.com"
+    apiKey: "your-api-key-here"
+    downloadLicense: true  # Set to true for initial setup
+
+image:
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0
+  tag: latest
+
+ingress:
+  enabled: true
+  controllerType: azure-loadbalancer
+  hosts:
+    - host: document-intelligence.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: "8"
+    memory: 16Gi
+  limits:
+    cpu: "8"
+    memory: 24Gi
+
+---
+# Example 2: Disconnected mode with NGINX Ingress
+# Use this after successfully downloading the license
+
+kubernetesVersion: "1.32"
+
+documentIntelligence:
+  modelType: layout
+  azure:
+    downloadLicense: false  # Disable Azure connectivity
+  license:
+    storageSize: 2Gi
+  output:
+    storageSize: 10Gi
+
+image:
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0
+  tag: latest
+
+ingress:
+  enabled: true
+  controllerType: nginx
+  hosts:
+    - host: document-intelligence.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+service:
+  type: ClusterIP
+
+resources:
+  requests:
+    cpu: "8"
+    memory: 16Gi
+  limits:
+    cpu: "8"
+    memory: 24Gi
+
+---
+# Example 3: Invoice model with existing PVCs
+
+documentIntelligence:
+  modelType: invoice
+  azure:
+    downloadLicense: false
+  license:
+    existingClaim: "my-license-pvc"
+  output:
+    existingClaim: "my-output-pvc"
+
+image:
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/invoice-3.0
+  tag: latest
+
+resources:
+  requests:
+    cpu: "8"
+    memory: 16Gi
+  limits:
+    cpu: "8"
+    memory: 24Gi
+
+---
+# Example 4: Custom model with shared storage
+
+documentIntelligence:
+  modelType: customTemplate
+  azure:
+    downloadLicense: false
+  license:
+    storageSize: 2Gi
+  output:
+    storageSize: 10Gi
+  shared:
+    enabled: true
+    storageSize: 20Gi
+
+image:
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/custom-template-3.0
+  tag: latest
+
+resources:
+  requests:
+    cpu: "8"
+    memory: 16Gi
+  limits:
+    cpu: "8"
+    memory: 24Gi
+
+---
+# Example 5: Application Gateway Ingress Controller
+
+kubernetesVersion: "1.28"
+
+documentIntelligence:
+  modelType: invoice
+  azure:
+    downloadLicense: false
+  license:
+    storageSize: 2Gi
+  output:
+    storageSize: 10Gi
+
+image:
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/invoice-3.0
+  tag: latest
+
+ingress:
+  enabled: true
+  controllerType: application-gateway
+  hosts:
+    - host: invoice.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: "8"
+    memory: 16Gi
+  limits:
+    cpu: "8"
+    memory: 24Gi
+
+---
+# Example 6: Kubernetes 1.24 or older (pre-1.24)
+
+kubernetesVersion: "pre-1.24"  # Disables securityContext
+
+documentIntelligence:
+  modelType: layout
+  azure:
+    downloadLicense: false
+  license:
+    storageSize: 2Gi
+  output:
+    storageSize: 10Gi
+
+image:
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0
+  tag: latest
+
+ingress:
+  enabled: true
+  controllerType: azure-loadbalancer
+  hosts:
+    - host: document-intelligence.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: "8"
+    memory: 16Gi
+  limits:
+    cpu: "8"
+    memory: 24Gi
+
+---
+# Example 7: High-performance setup with premium storage
+
+kubernetesVersion: "1.32"
+
+documentIntelligence:
+  modelType: layout
+  azure:
+    downloadLicense: false
+  license:
+    storageSize: 2Gi
+    storageClassName: "premium-ssd"
+  output:
+    storageSize: 20Gi
+    storageClassName: "premium-ssd"
+
+image:
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0
+  tag: latest
+
+ingress:
+  enabled: true
+  controllerType: nginx
+  hosts:
+    - host: document-intelligence.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  requests:
+    cpu: "10"
+    memory: 20Gi
+  limits:
+    cpu: "12"
+    memory: 32Gi
+
+nodeSelector:
+  workload: ai-compute
+
+tolerations:
+  - key: "ai-workload"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"

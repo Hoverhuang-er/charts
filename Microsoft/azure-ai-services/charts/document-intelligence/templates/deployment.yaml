@@ -28,22 +28,52 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "azure-ai-services.serviceAccountName" . }}
+      {{- if not (or (eq .Values.kubernetesVersion "pre-1.24") (semverCompare "<1.24" .Values.kubernetesVersion)) }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
+          {{- if not (or (eq .Values.kubernetesVersion "pre-1.24") (semverCompare "<1.24" .Values.kubernetesVersion)) }}
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.service.targetPort | default .Values.service.port }}
               protocol: TCP
+          env:
+            - name: eula
+              value: "accept"
+            {{- if .Values.documentIntelligence.azure.downloadLicense }}
+            - name: billing
+              value: {{ .Values.documentIntelligence.azure.billingEndpoint | quote }}
+            - name: apikey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-ai-services.fullname" . }}-azure
+                  key: apiKey
+            - name: DownloadLicense
+              value: "True"
+            {{- end }}
+            - name: Mounts:License
+              value: {{ .Values.documentIntelligence.license.mountPath | quote }}
+            - name: Mounts:Output
+              value: {{ .Values.documentIntelligence.output.mountPath | quote }}
+            {{- if .Values.documentIntelligence.shared.enabled }}
+            - name: SharedRootFolder
+              value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
+            - name: Mounts:Shared
+              value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
+            {{- end }}
+            - name: Logging:Console:LogLevel:Default
+              value: "Information"
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -56,14 +86,33 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
+            - name: license
+              mountPath: {{ .Values.documentIntelligence.license.mountPath }}
+            - name: output
+              mountPath: {{ .Values.documentIntelligence.output.mountPath }}
+            {{- if .Values.documentIntelligence.shared.enabled }}
+            - name: shared
+              mountPath: {{ .Values.documentIntelligence.shared.mountPath }}
+            {{- end }}
+            {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.volumes }}
+            {{- end }}
       volumes:
+        - name: license
+          persistentVolumeClaim:
+            claimName: {{ .Values.documentIntelligence.license.existingClaim | default (printf "%s-license" (include "azure-ai-services.fullname" .)) }}
+        - name: output
+          persistentVolumeClaim:
+            claimName: {{ .Values.documentIntelligence.output.existingClaim | default (printf "%s-output" (include "azure-ai-services.fullname" .)) }}
+        {{- if .Values.documentIntelligence.shared.enabled }}
+        - name: shared
+          persistentVolumeClaim:
+            claimName: {{ .Values.documentIntelligence.shared.existingClaim | default (printf "%s-shared" (include "azure-ai-services.fullname" .)) }}
+        {{- end }}
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

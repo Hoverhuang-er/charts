@@ -1,0 +1,53 @@
+{{- if not .Values.documentIntelligence.license.existingClaim }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "azure-ai-services.fullname" . }}-license
+  labels:
+    {{- include "azure-ai-services.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.documentIntelligence.license.storageClassName }}
+  storageClassName: {{ .Values.documentIntelligence.license.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.documentIntelligence.license.storageSize }}
+---
+{{- end }}
+{{- if not .Values.documentIntelligence.output.existingClaim }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "azure-ai-services.fullname" . }}-output
+  labels:
+    {{- include "azure-ai-services.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.documentIntelligence.output.storageClassName }}
+  storageClassName: {{ .Values.documentIntelligence.output.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.documentIntelligence.output.storageSize }}
+---
+{{- end }}
+{{- if and .Values.documentIntelligence.shared.enabled (not .Values.documentIntelligence.shared.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "azure-ai-services.fullname" . }}-shared
+  labels:
+    {{- include "azure-ai-services.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  {{- if .Values.documentIntelligence.shared.storageClassName }}
+  storageClassName: {{ .Values.documentIntelligence.shared.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.documentIntelligence.shared.storageSize }}
+{{- end }}

@@ -5,13 +5,26 @@ metadata:
   name: {{ include "azure-ai-services.fullname" . }}
   labels:
     {{- include "azure-ai-services.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    {{- if eq .Values.ingress.controllerType "azure-loadbalancer" }}
+    service.beta.kubernetes.io/azure-load-balancer-internal: {{ .Values.ingress.annotations | dig "service.beta.kubernetes.io/azure-load-balancer-internal" "false" | quote }}
+    {{- else if eq .Values.ingress.controllerType "application-gateway" }}
+    kubernetes.io/ingress.class: azure/application-gateway
+    appgw.ingress.kubernetes.io/backend-path-prefix: {{ .Values.ingress.annotations | dig "appgw.ingress.kubernetes.io/backend-path-prefix" "/" | quote }}
+    {{- else if eq .Values.ingress.controllerType "nginx" }}
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: {{ .Values.ingress.annotations | dig "nginx.ingress.kubernetes.io/rewrite-target" "/" | quote }}
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
-  {{- with .Values.ingress.className }}
-  ingressClassName: {{ . }}
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- else if eq .Values.ingress.controllerType "nginx" }}
+  ingressClassName: nginx
+  {{- else if eq .Values.ingress.controllerType "application-gateway" }}
+  ingressClassName: azure-application-gateway
   {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
