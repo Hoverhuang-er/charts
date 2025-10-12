@@ -2,17 +2,16 @@
 
 set -euo pipefail
 
-CHART_DIR="${CHART_DIR:-charts}"
 REGISTRY_HOST="${REGISTRY:-ghcr.io}"
 REGISTRY_NAMESPACE="${NAMESPACE:-hoverhuang-er/charts}"
 PACKAGE_DIR="${PACKAGE_DIR:-dist}"
 
 mkdir -p "${PACKAGE_DIR}"
 
-for chart_path in "${CHART_DIR}"/*; do
-    [[ -d "${chart_path}" ]] || continue
-    [[ -f "${chart_path}/Chart.yaml" ]] || continue
-
+# Find all Chart.yaml files recursively
+echo "==> Searching for Helm charts..."
+while IFS= read -r chart_yaml; do
+    chart_path=$(dirname "${chart_yaml}")
     chart_name=$(basename "${chart_path}")
 
     echo "\n==> Building dependencies for ${chart_name}"
@@ -29,7 +28,7 @@ for chart_path in "${CHART_DIR}"/*; do
 
     echo "==> Pushing ${package_path} to oci://${REGISTRY_HOST}/${REGISTRY_NAMESPACE}"
     helm push "${package_path}" "oci://${REGISTRY_HOST}/${REGISTRY_NAMESPACE}"
-done
+done < <(find . -name "Chart.yaml" -type f)
 
 # Keep .tgz files for GitHub Release uploads when running from a tag
 if [[ "${IS_TAG:-false}" != "true" ]]; then
@@ -37,4 +36,5 @@ if [[ "${IS_TAG:-false}" != "true" ]]; then
     find "${PACKAGE_DIR}" -name '*.tgz' -delete
 else
     echo "\nKeeping packaged archives for GitHub Release"
+    ls -lh "${PACKAGE_DIR}"/*.tgz 2>/dev/null || echo "No .tgz files found"
 fi
