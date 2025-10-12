@@ -1,24 +1,33 @@
 apiVersion: v2
-name: azure-ai-services
-description: A Helm chart for Kubernetes
+name: magentic-ui
+description: A human-centered multi-agent web automation system powered by AutoGen
 
-# A chart can be either an 'application' or a 'library' chart.
-#
-# Application charts are a collection of templates that can be packaged into versioned archives
-# to be deployed.
-#
-# Library charts provide useful utilities or functions for the chart developer. They're included as
-# a dependency of application charts to inject those utilities and functions into the rendering
-# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+# Magentic-UI is a research prototype that provides a transparent and controllable interface
+# for web browsing, code execution, and file manipulation through AI agents.
+# 
+# Key Features:
+# - Co-Planning: Collaborate with AI to create step-by-step plans
+# - Co-Tasking: Guide task execution through chat or browser interaction
+# - Action Guards: Explicit approval for sensitive actions
+# - Plan Learning: Save and retrieve plans for future automation
 type: application
 
-# This is the chart version. This version number should be incremented each time you make changes
-# to the chart and its templates, including the app version.
-# Versions are expected to follow Semantic Versioning (https://semver.org/)
+# Chart version - increment when making changes to chart templates
 version: 0.1.0
 
-# This is the version number of the application being deployed. This version number should be
-# incremented each time you make changes to the application. Versions are not expected to
-# follow Semantic Versioning. They should reflect the version the application is using.
-# It is recommended to use it with quotes.
-appVersion: "1.16.0"
+# Application version - tracks the magentic-ui release version
+appVersion: "0.1.2"
+
+keywords:
+  - ai
+  - automation
+  - autogen
+  - browser-automation
+  - multi-agent
+  - web-agent
+home: https://github.com/microsoft/magentic-ui
+sources:
+  - https://github.com/microsoft/magentic-ui
+maintainers:
+  - name: Microsoft Research
+    url: https://www.microsoft.com/en-us/research/

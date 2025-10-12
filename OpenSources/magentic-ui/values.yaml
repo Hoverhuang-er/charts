@@ -1,23 +1,77 @@
-# Default values for azure-ai-services.
+# Default values for magentic-ui
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+# Replica count for the magentic-ui backend
+# Note: Due to Docker-in-Docker requirements, scaling beyond 1 replica
+# requires additional configuration for shared volumes and session management
 replicaCount: 1
 
-# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+# Container image configuration
+# magentic-ui backend (Python FastAPI application)
 image:
-  repository: nginx
-  # This sets the pull policy for images.
+  repository: ghcr.io/microsoft/magentic-ui
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
+  # Overrides the image tag whose default is the chart appVersion (0.1.2)
   tag: ""
 
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+# Browser container configuration (used for web automation)
+browserImage:
+  repository: ghcr.io/microsoft/magentic-ui-browser
+  tag: "0.0.1"
+  pullPolicy: IfNotPresent
+
+# Python execution environment container (used for code execution)
+pythonEnvImage:
+  repository: ghcr.io/microsoft/magentic-ui-python-env
+  tag: "0.0.1"
+  pullPolicy: IfNotPresent
+
+# Image pull secrets for private registries
 imagePullSecrets: []
-# This is to override the chart name.
+
+# Override chart name
 nameOverride: ""
 fullnameOverride: ""
+
+# Magentic-UI Configuration
+magneticUI:
+  # OpenAI API Configuration
+  openai:
+    # API Key for OpenAI (required)
+    # Can be set via existing secret or direct value
+    apiKey: ""
+    # Use existing secret for API key
+    existingSecret: ""
+    existingSecretKey: "apikey"
+    # Base URL for OpenAI API (optional, for Azure OpenAI or custom endpoints)
+    baseUrl: ""
+    # Model to use
+    model: "gpt-4o-2024-08-06"
+  
+  # Application configuration
+  config:
+    # Port for the web UI
+    port: 8081
+    # Host to bind to
+    host: "0.0.0.0"
+    # Number of uvicorn workers
+    workers: 1
+    # Enable API documentation
+    docs: true
+    # Run without Docker (disables code execution and live browser view)
+    runWithoutDocker: false
+    
+  # Workspace configuration
+  workspace:
+    # Persistent storage for user data, sessions, and plans
+    enabled: true
+    # Storage class (leave empty for cluster default)
+    storageClass: ""
+    # Storage size
+    size: 10Gi
+    # Access mode
+    accessMode: ReadWriteOnce
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -40,84 +94,139 @@ podLabels: {}
 
 podSecurityContext: {}
   # fsGroup: 2000
+  # Note: magentic-ui pods require privileged mode for Docker-in-Docker
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+# Service configuration
 service:
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+  # Main web UI port
+  port: 8081
+  # noVNC port for browser view
+  novncPort: 6080
+  # Playwright WebSocket port
+  playwrightPort: 37367
 
-# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+# Ingress configuration
 ingress:
   enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    # WebSocket support for noVNC and Playwright
+    nginx.ingress.kubernetes.io/websocket-services: "magentic-ui"
   hosts:
-    - host: chart-example.local
+    - host: magentic-ui.example.com
       paths:
         - path: /
-          pathType: ImplementationSpecific
+          pathType: Prefix
+          backend:
+            service:
+              name: magentic-ui
+              port: 8081
   tls: []
-  #  - secretName: chart-example-tls
+  #  - secretName: magentic-ui-tls
   #    hosts:
-  #      - chart-example.local
+  #      - magentic-ui.example.com
 
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+# Resource limits and requests
+# Magentic-UI requires significant resources due to browser automation and code execution
+resources:
+  limits:
+    cpu: 4000m
+    memory: 8Gi
+  requests:
+    cpu: 2000m
+    memory: 4Gi
 
-# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# Health check probes
 livenessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /api/health
+    port: 8081
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
 readinessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /api/health
+    port: 8081
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
 
-# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+# Autoscaling configuration
+# Note: Due to Docker-in-Docker and session state management,
+# horizontal scaling requires additional configuration
 autoscaling:
   enabled: false
   minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 75
 
-# Additional volumes on the output Deployment definition.
+# Additional volumes
 volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+# - name: custom-config
+#   configMap:
+#     name: magentic-ui-config
 
-# Additional volumeMounts on the output Deployment definition.
+# Additional volume mounts
 volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
+# - name: custom-config
+#   mountPath: /app/config
 #   readOnly: true
 
+# Node selector
 nodeSelector: {}
+# Example: Run on nodes with SSD
+# disktype: ssd
 
+# Tolerations
 tolerations: []
+# Example: Tolerate nodes with high memory taint
+# - key: "high-memory"
+#   operator: "Equal"
+#   value: "true"
+#   effect: "NoSchedule"
 
+# Affinity rules
 affinity: {}
+# Example: Prefer nodes with GPU
+# nodeAffinity:
+#   preferredDuringSchedulingIgnoredDuringExecution:
+#   - weight: 100
+#     preference:
+#       matchExpressions:
+#       - key: accelerator
+#         operator: In
+#         values:
+#         - nvidia-gpu
+
+# Security context for pods
+# Note: magentic-ui requires privileged mode for Docker-in-Docker
+securityContext:
+  privileged: true
+  capabilities:
+    add:
+      - SYS_ADMIN
+
+# Database configuration (optional, defaults to SQLite)
+database:
+  # Type: sqlite or postgresql
+  type: sqlite
+  # PostgreSQL configuration (if type is postgresql)
+  postgresql:
+    host: ""
+    port: 5432
+    database: "magneticui"
+    username: "magneticui"
+    # Existing secret for database password
+    existingSecret: ""
+    existingSecretKey: "password"
+    # Direct password (not recommended for production)
+    password: ""
