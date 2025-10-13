@@ -17,7 +17,7 @@
       "properties": {
         "modelType": {
           "type": "string",
-          "enum": ["layout", "invoice", "receipt", "businessCard", "idDocument", "generalDocument", "customTemplate"],
+          "enum": ["read", "layout", "invoice", "receipt", "businessCard", "idDocument", "generalDocument", "customTemplate"],
           "description": "Document Intelligence model type"
         },
         "azure": {

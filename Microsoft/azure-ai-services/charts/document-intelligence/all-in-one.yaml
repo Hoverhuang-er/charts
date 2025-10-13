@@ -8,7 +8,7 @@ metadata:
     helm.sh/chart: document-intelligence-0.1.0
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
-    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/version: "4.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -21,7 +21,7 @@ metadata:
     helm.sh/chart: document-intelligence-0.1.0
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
-    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/version: "4.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   accessModes:
@@ -39,7 +39,7 @@ metadata:
     helm.sh/chart: document-intelligence-0.1.0
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
-    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/version: "4.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   accessModes:
@@ -57,7 +57,7 @@ metadata:
     helm.sh/chart: document-intelligence-0.1.0
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
-    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/version: "4.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -79,7 +79,7 @@ metadata:
     helm.sh/chart: document-intelligence-0.1.0
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
-    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/version: "4.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -93,7 +93,7 @@ spec:
         helm.sh/chart: document-intelligence-0.1.0
         app.kubernetes.io/name: document-intelligence
         app.kubernetes.io/instance: document-intelligence
-        app.kubernetes.io/version: "3.0"
+        app.kubernetes.io/version: "4.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: document-intelligence
@@ -157,7 +157,7 @@ metadata:
     helm.sh/chart: document-intelligence-0.1.0
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
-    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/version: "4.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     service.beta.kubernetes.io/azure-load-balancer-internal: "false"
@@ -184,7 +184,7 @@ metadata:
     helm.sh/chart: document-intelligence-0.1.0
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
-    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/version: "4.0"
     app.kubernetes.io/managed-by: Helm
   annotations:
     "helm.sh/hook": test

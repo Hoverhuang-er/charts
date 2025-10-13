@@ -85,9 +85,9 @@ helm upgrade document-intelligence ./document-intelligence \
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `kubernetesVersion` | Kubernetes version (1.32, 1.28, 1.26, 1.24, pre-1.24) | `1.32` |
-| `image.repository` | Container image repository | `mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0` |
+| `image.repository` | Container image repository | `mcr.microsoft.com/azure-cognitive-services/form-recognizer/read-4.0` |
 | `image.tag` | Container image tag | `latest` |
-| `documentIntelligence.modelType` | Model type (layout, invoice, etc.) | `layout` |
+| `documentIntelligence.modelType` | Model type (read, layout, invoice, etc.) | `read` |
 | `documentIntelligence.azure.billingEndpoint` | Azure billing endpoint (for license download) | `""` |
 | `documentIntelligence.azure.apiKey` | Azure API key (for license download) | `""` |
 | `documentIntelligence.azure.downloadLicense` | Enable license download mode | `false` |
@@ -185,11 +185,11 @@ Create a `my-values.yaml` file:
 
 ```yaml
 image:
-  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/read-4.0
   tag: latest
 
 documentIntelligence:
-  modelType: layout
+  modelType: read
   azure:
     billingEndpoint: "https://your-resource.cognitiveservices.azure.com"
     apiKey: "your-api-key"
