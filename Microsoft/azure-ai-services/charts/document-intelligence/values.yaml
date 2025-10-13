@@ -54,7 +54,7 @@ documentIntelligence:
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/layout-3.0
+  repository: mcr.microsoft.com/azure-cognitive-services/form-recognizer/read-4.0
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
