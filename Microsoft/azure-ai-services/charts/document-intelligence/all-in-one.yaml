@@ -1,0 +1,197 @@
+---
+# Source: document-intelligence/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: document-intelligence
+  labels:
+    helm.sh/chart: document-intelligence-0.1.0
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: document-intelligence/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: document-intelligence-license
+  labels:
+    helm.sh/chart: document-intelligence-0.1.0
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: document-intelligence/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: document-intelligence-output
+  labels:
+    helm.sh/chart: document-intelligence-0.1.0
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Source: document-intelligence/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-intelligence
+  labels:
+    helm.sh/chart: document-intelligence-0.1.0
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+---
+# Source: document-intelligence/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-intelligence
+  labels:
+    helm.sh/chart: document-intelligence-0.1.0
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: document-intelligence
+      app.kubernetes.io/instance: document-intelligence
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: document-intelligence-0.1.0
+        app.kubernetes.io/name: document-intelligence
+        app.kubernetes.io/instance: document-intelligence
+        app.kubernetes.io/version: "3.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: document-intelligence
+      containers:
+        - name: document-intelligence
+          image: "mcr.microsoft.com/azure-cognitive-services/form-recognizer/read-4.0:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+          env:
+            - name: eula
+              value: "accept"
+            - name: Mounts.License
+              value: "/license"
+            - name: Mounts.Output
+              value: "/logs"
+            - name: Logging.Console.LogLevel.Default
+              value: "Information"
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: "8"
+              memory: 24Gi
+            requests:
+              cpu: "8"
+              memory: 16Gi
+          volumeMounts:
+            - name: license
+              mountPath: /license
+            - name: output
+              mountPath: /logs
+      volumes:
+        - name: license
+          persistentVolumeClaim:
+            claimName: document-intelligence-license
+        - name: output
+          persistentVolumeClaim:
+            claimName: document-intelligence-output
+---
+# Source: document-intelligence/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: document-intelligence
+  labels:
+    helm.sh/chart: document-intelligence-0.1.0
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+spec:
+  rules:
+    - host: "document-intelligence.example.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: document-intelligence
+                port:
+                  number: 5000
+---
+# Source: document-intelligence/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "document-intelligence-test-connection"
+  labels:
+    helm.sh/chart: document-intelligence-0.1.0
+    app.kubernetes.io/name: document-intelligence
+    app.kubernetes.io/instance: document-intelligence
+    app.kubernetes.io/version: "3.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['document-intelligence:5000']
+  restartPolicy: Never
