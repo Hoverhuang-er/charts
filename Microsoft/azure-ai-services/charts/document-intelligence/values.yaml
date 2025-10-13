@@ -12,8 +12,8 @@ kubernetesVersion: "1.32"
 
 # Azure AI Document Intelligence container configuration
 documentIntelligence:
-  # Container model type: layout, invoice, receipt, businessCard, idDocument, generalDocument, customTemplate
-  modelType: layout
+  # Container model type: read, layout, invoice, receipt, businessCard, idDocument, generalDocument, customTemplate
+  modelType: read
   
   # Azure configuration (required for initial license download)
   azure:

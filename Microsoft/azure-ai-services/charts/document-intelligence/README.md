@@ -23,6 +23,7 @@ This chart supports the following Document Intelligence models:
 
 | Model | Image Repository | Minimum Memory | Recommended Memory |
 |-------|-----------------|----------------|-------------------|
+| Read | `form-recognizer/read-4.0` | 8GB | 16GB |
 | Layout | `form-recognizer/layout-3.0` | 16GB | 24GB |
 | Invoice | `form-recognizer/invoice-3.0` | 16GB | 24GB |
 | Receipt | `form-recognizer/receipt-3.0` | 11GB | 24GB |
@@ -32,6 +33,17 @@ This chart supports the following Document Intelligence models:
 | Custom Template | `form-recognizer/custom-template-3.0` | 16GB | 24GB |
 
 ## Installation
+
+### Quick Start with all-in-one.yaml
+
+For quick deployment without Helm, you can use the pre-rendered `all-in-one.yaml` manifest:
+
+```bash
+# Deploy directly with kubectl
+kubectl apply -f https://raw.githubusercontent.com/Hoverhuang-er/charts/main/Microsoft/azure-ai-services/charts/document-intelligence/all-in-one.yaml
+```
+
+**Note:** The all-in-one.yaml uses default configurations. For production deployments or custom configurations, use Helm installation methods below.
 
 ### Step 1: Request Access
 
@@ -260,6 +272,113 @@ documentIntelligence:
   shared:
     enabled: true
     storageSize: 20Gi
+```
+
+## Using all-in-one.yaml for kubectl Deployment
+
+The `all-in-one.yaml` file is a pre-rendered Kubernetes manifest that contains all resources needed to deploy Document Intelligence. This is useful when:
+- You don't have Helm installed
+- You need a simple, direct deployment
+- You want to inspect all resources before deployment
+- You're using GitOps tools like ArgoCD or Flux
+
+### What's Included
+
+The all-in-one.yaml contains the following resources:
+- **ServiceAccount**: For pod identity
+- **PersistentVolumeClaim (license)**: 1Gi storage for license files
+- **PersistentVolumeClaim (output)**: 5Gi storage for usage logs
+- **Service**: ClusterIP service on port 5000
+- **Deployment**: Document Intelligence container with:
+  - Image: `mcr.microsoft.com/azure-cognitive-services/form-recognizer/read-4.0:latest`
+  - Resources: 8 CPU cores, 16-24Gi memory
+  - Health probes: liveness and readiness checks
+  - Environment variables: Proper dot notation (Mounts.License, Mounts.Output, Logging.Console.LogLevel.Default)
+- **Ingress**: Azure Load Balancer configuration with example hostname
+- **Test Pod**: For helm test compatibility
+
+### Deployment Steps
+
+1. **Deploy directly from URL**:
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/Hoverhuang-er/charts/main/Microsoft/azure-ai-services/charts/document-intelligence/all-in-one.yaml
+   ```
+
+2. **Verify deployment**:
+   ```bash
+   kubectl get all -l app.kubernetes.io/name=document-intelligence
+   kubectl get pvc -l app.kubernetes.io/name=document-intelligence
+   ```
+
+3. **Check pod logs**:
+   ```bash
+   kubectl logs -f deployment/document-intelligence
+   ```
+
+**Optional: If you need to customize before deploying:**
+```bash
+# Download the manifest first
+curl -O https://raw.githubusercontent.com/Hoverhuang-er/charts/main/Microsoft/azure-ai-services/charts/document-intelligence/all-in-one.yaml
+
+# Edit as needed
+vi all-in-one.yaml
+
+# Deploy the customized version
+kubectl apply -f all-in-one.yaml
+```
+
+### Important Notes
+
+- **Default Configuration**: The all-in-one.yaml uses default values from `values.yaml`
+- **License Download**: You'll need to enable license download by adding environment variables manually or use Helm for initial setup
+- **Storage Classes**: Uses default storage class; modify if you need specific storage classes
+- **Ingress**: Default ingress hostname is `document-intelligence.example.com` - update this for your domain
+- **No Azure Credentials**: The default manifest doesn't include Azure billing endpoint and API key for security reasons
+
+### Customizing all-in-one.yaml
+
+To add Azure credentials for license download, edit the Deployment section:
+
+```yaml
+env:
+  - name: eula
+    value: "accept"
+  - name: billing
+    value: "https://your-resource.cognitiveservices.azure.com"
+  - name: apikey
+    value: "your-api-key"
+  - name: DownloadLicense
+    value: "True"
+  - name: Mounts.License
+    value: "/license"
+  # ... rest of the env vars
+```
+
+### Regenerating all-in-one.yaml
+
+If you need to regenerate the manifest with custom values:
+
+```bash
+# Clone the repository
+git clone https://github.com/Hoverhuang-er/charts.git
+cd charts/Microsoft/azure-ai-services/charts/document-intelligence
+
+# Render with custom values
+helm template document-intelligence . \
+  --set image.repository="mcr.microsoft.com/azure-cognitive-services/form-recognizer/invoice-3.0" \
+  --set documentIntelligence.license.storageSize="2Gi" \
+  > my-custom-all-in-one.yaml
+
+# Deploy
+kubectl apply -f my-custom-all-in-one.yaml
+```
+
+### Uninstalling
+
+To remove all resources:
+
+```bash
+kubectl delete -f all-in-one.yaml
 ```
 
 ## Troubleshooting
