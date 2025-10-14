@@ -136,16 +136,17 @@ ingress:
   #    hosts:
   #      - document-intelligence.example.com
 
-# Resource requirements based on Azure AI Document Intelligence specifications
-# Minimum requirements for layout model: 8 cores, 16GB memory
-# Recommended: 8 cores, 24GB memory
+# Resource requirements - Minimal resource mode
+# Default node has 2GB memory, 2 CPU cores
+# VPA (Vertical Pod Autoscaler) will handle memory scaling
+# HPA (Horizontal Pod Autoscaler) will handle horizontal scaling when needed
 resources:
   limits:
     cpu: "8"
     memory: 24Gi
   requests:
-    cpu: "8"
-    memory: 16Gi
+    cpu: "2"
+    memory: 2Gi
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
@@ -164,18 +165,25 @@ readinessProbe:
   timeoutSeconds: 5
 
 # This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+# HPA (Horizontal Pod Autoscaler) - Enabled for horizontal scaling based on CPU usage
+# When CPU usage exceeds 80%, HPA will create more replicas (up to maxReplicas)
+# VPA (Vertical Pod Autoscaler) should be configured separately to handle memory scaling
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 1
-  maxReplicas: 100
+  maxReplicas: 10
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-# VPA (Vertical Pod Autoscaler) configuration - disabled by default
-# Enable in values-mlp.yaml for minimal resource mode
+# VPA (Vertical Pod Autoscaler) configuration
+# VPA automatically adjusts memory requests based on actual usage
+# Requires VPA to be installed in the cluster: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
 vpa:
-  enabled: false
+  enabled: true
+  # UpdateMode: "Auto" - VPA will automatically update memory requests
+  # Other options: "Initial" (only at pod creation), "Off" (recommendations only)
   updateMode: "Auto"
+  # Resource policy defines min/max boundaries for VPA
   minAllowed:
     cpu: "2"
     memory: "2Gi"
@@ -183,27 +191,55 @@ vpa:
     cpu: "8"
     memory: "24Gi"
 
-# Vector configuration for log processing - disabled by default
-# Enable in values-mlp.yaml for logging and metrics
+# Vector configuration for log processing and metrics
+# Vector reads logs from /logs directory, filters errors, and forwards to Prometheus and ELK
 vector:
-  enabled: false
+  enabled: true
   image:
     repository: timberio/vector
     tag: "0.34.1-alpine"
     pullPolicy: IfNotPresent
+  
+  # Prometheus remote write configuration
   prometheus:
-    enabled: false
+    enabled: true
+    # Remote write endpoint (e.g., http://prometheus-server:9090/api/v1/write)
     remoteWriteUrl: ""
+    # Authentication (optional)
+    # basicAuth:
+    #   username: ""
+    #   password: ""
+    # bearerToken: ""
+  
+  # ELK (Elasticsearch) configuration
   elasticsearch:
-    enabled: false
+    enabled: true
+    # Elasticsearch endpoint (e.g., http://elasticsearch:9200)
     endpoint: ""
+    # Index pattern for logs
     index: "document-intelligence-%Y.%m.%d"
+    # Authentication (optional)
+    # username: ""
+    # password: ""
+    # apiKey: ""
+  
+  # Error detection configuration
   errorDetection:
+    # Time window for error counting (in seconds)
     windowSeconds: 60
+    # Patterns to match errors in logs
     errorPatterns:
       - "error"
       - "ERROR"
+      - "Error"
       - "exception"
+      - "Exception"
+      - "EXCEPTION"
+      - "failed"
+      - "Failed"
+      - "FAILED"
+  
+  # Resource limits for Vector sidecar
   resources:
     requests:
       cpu: "100m"

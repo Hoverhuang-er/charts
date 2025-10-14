@@ -98,10 +98,43 @@ spec:
             {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+        {{- if .Values.vector.enabled }}
+        - name: vector
+          image: "{{ .Values.vector.image.repository }}:{{ .Values.vector.image.tag }}"
+          imagePullPolicy: {{ .Values.vector.image.pullPolicy }}
+          args:
+            - "--config"
+            - "/etc/vector/vector.toml"
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          {{- with .Values.vector.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: output
+              mountPath: /logs
+              readOnly: true
+            - name: vector-config
+              mountPath: /etc/vector
+            - name: vector-data
+              mountPath: /vector-data-dir
+        {{- end }}
       volumes:
         - name: license
+          {{- if .Values.documentIntelligence.license.licenseData }}
+          secret:
+            secretName: {{ include "azure-ai-services.fullname" . }}-license
+            items:
+            - key: license.dat
+              path: license.dat
+          {{- else }}
           persistentVolumeClaim:
             claimName: {{ .Values.documentIntelligence.license.existingClaim | default (printf "%s-license" (include "azure-ai-services.fullname" .)) }}
+          {{- end }}
         - name: output
           persistentVolumeClaim:
             claimName: {{ .Values.documentIntelligence.output.existingClaim | default (printf "%s-output" (include "azure-ai-services.fullname" .)) }}
@@ -109,6 +142,13 @@ spec:
         - name: shared
           persistentVolumeClaim:
             claimName: {{ .Values.documentIntelligence.shared.existingClaim | default (printf "%s-shared" (include "azure-ai-services.fullname" .)) }}
+        {{- end }}
+        {{- if .Values.vector.enabled }}
+        - name: vector-config
+          configMap:
+            name: {{ include "azure-ai-services.fullname" . }}-vector-config
+        - name: vector-data
+          emptyDir: {}
         {{- end }}
         {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}

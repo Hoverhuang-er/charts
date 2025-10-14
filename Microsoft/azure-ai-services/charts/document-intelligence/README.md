@@ -78,6 +78,26 @@ helm upgrade document-intelligence ./document-intelligence \
   --set documentIntelligence.azure.downloadLicense=false
 ```
 
+### Alternative: Use Pre-downloaded License
+
+If you already have a downloaded `license.dat` file, you can provide it directly:
+
+```bash
+# Encode the license file
+LICENSE_DATA=$(base64 < license.dat)
+
+# Deploy with the license data (no download needed)
+helm install document-intelligence ./document-intelligence \
+  --set documentIntelligence.license.licenseData="$LICENSE_DATA"
+```
+
+This creates a Kubernetes Secret with the license file, eliminating the need for:
+- Initial license download step
+- License PVC (saves storage costs)
+- Azure credentials in production
+
+See [LICENSE-FILE-USAGE.md](LICENSE-FILE-USAGE.md) for detailed instructions and additional methods.
+
 ## Configuration
 
 ### Key Parameters

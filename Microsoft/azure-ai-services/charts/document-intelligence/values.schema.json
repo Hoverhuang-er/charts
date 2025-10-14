@@ -55,6 +55,10 @@
             "storageClassName": {
               "type": "string",
               "description": "Storage class name"
+            },
+            "licenseData": {
+              "type": "string",
+              "description": "Pre-downloaded license file content (base64 or plain text)"
             }
           }
         },
@@ -175,6 +179,46 @@
     "resources": {
       "type": "object",
       "description": "Resource requests and limits"
+    },
+    "vpa": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable Vertical Pod Autoscaler"
+        },
+        "updateMode": {
+          "type": "string",
+          "enum": ["Auto", "Initial", "Off"],
+          "description": "VPA update mode"
+        },
+        "minAllowed": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "description": "Minimum CPU"
+            },
+            "memory": {
+              "type": "string",
+              "description": "Minimum memory"
+            }
+          }
+        },
+        "maxAllowed": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "description": "Maximum CPU"
+            },
+            "memory": {
+              "type": "string",
+              "description": "Maximum memory"
+            }
+          }
+        }
+      }
     }
   }
 }

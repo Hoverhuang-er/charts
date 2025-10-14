@@ -1,4 +1,4 @@
-{{- if not .Values.documentIntelligence.license.existingClaim }}
+{{- if and (not .Values.documentIntelligence.license.existingClaim) (not .Values.documentIntelligence.license.licenseData) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

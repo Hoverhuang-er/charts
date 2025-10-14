@@ -1,0 +1,26 @@
+{{- if .Values.vpa.enabled }}
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: {{ include "azure-ai-services.fullname" . }}
+  labels:
+    {{- include "azure-ai-services.labels" . | nindent 4 }}
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "azure-ai-services.fullname" . }}
+  updatePolicy:
+    updateMode: {{ .Values.vpa.updateMode | quote }}
+  resourcePolicy:
+    containerPolicies:
+    - containerName: {{ .Chart.Name }}
+      minAllowed:
+        cpu: {{ .Values.vpa.minAllowed.cpu | quote }}
+        memory: {{ .Values.vpa.minAllowed.memory | quote }}
+      maxAllowed:
+        cpu: {{ .Values.vpa.maxAllowed.cpu | quote }}
+        memory: {{ .Values.vpa.maxAllowed.memory | quote }}
+      controlledResources:
+      - memory
+{{- end }}

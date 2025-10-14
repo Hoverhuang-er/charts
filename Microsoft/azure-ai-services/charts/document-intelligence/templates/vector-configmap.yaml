@@ -1,0 +1,125 @@
+{{- if .Values.vector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "azure-ai-services.fullname" . }}-vector-config
+  labels:
+    {{- include "azure-ai-services.labels" . | nindent 4 }}
+data:
+  vector.toml: |
+    # Vector configuration for document-intelligence log processing
+    
+    # Data directory for Vector state
+    data_dir = "/vector-data-dir"
+    
+    # Source: Read logs from /logs directory
+    [sources.document_intelligence_logs]
+      type = "file"
+      include = ["/logs/*.log", "/logs/**/*.log"]
+      read_from = "beginning"
+      max_line_bytes = 102400
+    
+    # Transform: Parse log lines and extract fields
+    [transforms.parse_logs]
+      type = "remap"
+      inputs = ["document_intelligence_logs"]
+      source = '''
+        . = parse_json!(.message) ?? {"raw_message": .message}
+        .timestamp = now()
+        .service = "document-intelligence"
+        .pod_name = get_env_var!("HOSTNAME")
+      '''
+    
+    # Transform: Filter and detect errors
+    [transforms.detect_errors]
+      type = "filter"
+      inputs = ["parse_logs"]
+      condition = '''
+        {{- range .Values.vector.errorDetection.errorPatterns }}
+        match(string!(.message) ?? "", r'{{ . }}') ||
+        {{- end }}
+        false
+      '''
+    
+    # Transform: Count errors in time window
+    [transforms.error_metrics]
+      type = "log_to_metric"
+      inputs = ["detect_errors"]
+      
+      [[transforms.error_metrics.metrics]]
+        type = "counter"
+        field = "message"
+        name = "document_intelligence_errors_total"
+        namespace = "azure_ai"
+        tags.service = "document-intelligence"
+        tags.pod = "{{`{{ pod_name }}`}}"
+    
+    # Transform: Aggregate errors by time window
+    [transforms.error_rate]
+      type = "aggregate"
+      inputs = ["error_metrics"]
+      interval_ms = {{ mul .Values.vector.errorDetection.windowSeconds 1000 }}
+      
+      [[transforms.error_rate.aggregates]]
+        type = "count"
+        field = "message"
+    
+    {{- if .Values.vector.prometheus.enabled }}
+    # Sink: Send metrics to Prometheus remote write
+    [sinks.prometheus_remote_write]
+      type = "prometheus_remote_write"
+      inputs = ["error_metrics"]
+      endpoint = "{{ .Values.vector.prometheus.remoteWriteUrl }}"
+      
+      {{- if .Values.vector.prometheus.basicAuth }}
+      [sinks.prometheus_remote_write.auth]
+        strategy = "basic"
+        user = "{{ .Values.vector.prometheus.basicAuth.username }}"
+        password = "{{ .Values.vector.prometheus.basicAuth.password }}"
+      {{- else if .Values.vector.prometheus.bearerToken }}
+      [sinks.prometheus_remote_write.auth]
+        strategy = "bearer"
+        token = "{{ .Values.vector.prometheus.bearerToken }}"
+      {{- end }}
+      
+      [sinks.prometheus_remote_write.batch]
+        max_events = 1000
+        timeout_secs = 1
+    {{- end }}
+    
+    {{- if .Values.vector.elasticsearch.enabled }}
+    # Sink: Send all logs to Elasticsearch
+    [sinks.elasticsearch]
+      type = "elasticsearch"
+      inputs = ["parse_logs"]
+      endpoint = "{{ .Values.vector.elasticsearch.endpoint }}"
+      
+      # Dynamic index based on date
+      index = "{{ .Values.vector.elasticsearch.index }}"
+      
+      {{- if .Values.vector.elasticsearch.username }}
+      [sinks.elasticsearch.auth]
+        strategy = "basic"
+        user = "{{ .Values.vector.elasticsearch.username }}"
+        password = "{{ .Values.vector.elasticsearch.password }}"
+      {{- else if .Values.vector.elasticsearch.apiKey }}
+      [sinks.elasticsearch.auth]
+        strategy = "api_key"
+        api_key = "{{ .Values.vector.elasticsearch.apiKey }}"
+      {{- end }}
+      
+      [sinks.elasticsearch.batch]
+        max_events = 1000
+        timeout_secs = 10
+      
+      [sinks.elasticsearch.buffer]
+        type = "memory"
+        max_events = 10000
+    {{- end }}
+    
+    # Sink: Console output for debugging
+    [sinks.console_debug]
+      type = "console"
+      inputs = ["detect_errors"]
+      encoding.codec = "json"
+{{- end }}
