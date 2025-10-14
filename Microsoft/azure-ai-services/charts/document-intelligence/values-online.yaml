@@ -1,0 +1,37 @@
+# Online Mode Configuration Example
+# This example shows how to configure the chart for online mode
+# where it connects to Azure to download the license file
+
+documentIntelligence:
+  modelType: read
+  
+  # Azure configuration - REQUIRED for online mode
+  azure:
+    # Billing endpoint from Azure portal
+    billingEndpoint: "https://your-resource.cognitiveservices.azure.com"
+    # API key from Azure portal
+    apiKey: "your-api-key-here"
+    # Set to true to enable online mode and download license
+    downloadLicense: true
+  
+  license:
+    # PVC will be created to store the downloaded license
+    mountPath: /license
+    storageSize: 1Gi
+    # Do NOT set licenseData when using online mode
+    licenseData: ""
+  
+  output:
+    mountPath: /logs
+    storageSize: 5Gi
+
+# Standard resources for online mode
+resources:
+  limits:
+    cpu: "8"
+    memory: 24Gi
+  requests:
+    cpu: "8"
+    memory: 16Gi
+
+# Other settings remain the same...
