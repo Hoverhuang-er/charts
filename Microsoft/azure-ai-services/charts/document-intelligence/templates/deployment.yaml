@@ -62,14 +62,14 @@ spec:
             - name: DownloadLicense
               value: "True"
             {{- end }}
-            - name: Mounts.License
+            - name: Mounts{{ .Values.documentIntelligence.envSeparator | default "_" }}License
               value: {{ .Values.documentIntelligence.license.mountPath | quote }}
-            - name: Mounts.Output
+            - name: Mounts{{ .Values.documentIntelligence.envSeparator | default "_" }}Output
               value: {{ .Values.documentIntelligence.output.mountPath | quote }}
             {{- if .Values.documentIntelligence.shared.enabled }}
             - name: SharedRootFolder
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
-            - name: Mounts.Shared
+            - name: Mounts{{ .Values.documentIntelligence.envSeparator | default "_" }}Shared
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
             {{- end }}
             - name: Logging.Console.LogLevel.Default

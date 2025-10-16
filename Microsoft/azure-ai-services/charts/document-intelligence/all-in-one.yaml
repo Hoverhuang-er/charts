@@ -108,9 +108,9 @@ spec:
           env:
             - name: eula
               value: "accept"
-            - name: Mounts.License
+            - name: Mounts_License
               value: "/license"
-            - name: Mounts.Output
+            - name: Mounts_Output
               value: "/logs"
             - name: Logging.Console.LogLevel.Default
               value: "Information"

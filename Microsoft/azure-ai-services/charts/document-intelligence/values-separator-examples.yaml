@@ -1,0 +1,44 @@
+# Environment Variable Separator Examples
+# This file demonstrates different separator configurations
+
+---
+# Example 1: Using underscore (default)
+# Generates: Mounts_License, Mounts_Output, Mounts_Shared
+documentIntelligence:
+  envSeparator: "_"
+
+---
+# Example 2: Using dot
+# Generates: Mounts.License, Mounts.Output, Mounts.Shared
+# Note: Some Kubernetes versions may reject dots in environment variable names
+documentIntelligence:
+  envSeparator: "."
+
+---
+# Example 3: Using hyphen
+# Generates: Mounts-License, Mounts-Output, Mounts-Shared
+documentIntelligence:
+  envSeparator: "-"
+
+---
+# Example 4: Using colon
+# Generates: Mounts:License, Mounts:Output, Mounts:Shared
+# Note: Some Kubernetes versions may reject colons in environment variable names
+documentIntelligence:
+  envSeparator: ":"
+
+---
+# To use a specific separator, create a custom values file or override during installation:
+#
+# Method 1: Create custom-values.yaml
+# documentIntelligence:
+#   envSeparator: "-"
+#
+# Then install with:
+# helm install my-release . -f custom-values.yaml
+#
+# Method 2: Override during installation
+# helm install my-release . --set documentIntelligence.envSeparator="-"
+#
+# Method 3: Combine with other values files
+# helm install my-release . -f values-mlp.yaml --set documentIntelligence.envSeparator=":"

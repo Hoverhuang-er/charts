@@ -15,6 +15,12 @@ documentIntelligence:
   # Container model type: read, layout, invoice, receipt, businessCard, idDocument, generalDocument, customTemplate
   modelType: read
   
+  # Environment variable separator for mount paths
+  # Default: "_" (underscore) - results in Mounts_License, Mounts_Output, Mounts_Shared
+  # Other options: "." (dot), "-" (hyphen), ":" (colon)
+  # Note: Some Kubernetes versions may have restrictions on certain characters
+  envSeparator: "_"
+  
   # Azure configuration (required for initial license download)
   azure:
     # Billing endpoint from Azure portal (e.g., https://your-resource.cognitiveservices.azure.com)

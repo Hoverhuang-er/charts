@@ -20,6 +20,12 @@
           "enum": ["read", "layout", "invoice", "receipt", "businessCard", "idDocument", "generalDocument", "customTemplate"],
           "description": "Document Intelligence model type"
         },
+        "envSeparator": {
+          "type": "string",
+          "pattern": "^[._:\\-]$",
+          "default": "_",
+          "description": "Separator character for mount environment variables (e.g., Mounts_License). Options: _ . : -"
+        },
         "azure": {
           "type": "object",
           "properties": {
