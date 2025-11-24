@@ -5,7 +5,7 @@ kind: ServiceAccount
 metadata:
   name: document-intelligence
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -18,7 +18,7 @@ kind: ConfigMap
 metadata:
   name: document-intelligence-vector-config
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -125,7 +125,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: document-intelligence-license
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -143,7 +143,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: document-intelligence-output
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -161,7 +161,7 @@ kind: Service
 metadata:
   name: document-intelligence
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -183,7 +183,7 @@ kind: Deployment
 metadata:
   name: document-intelligence
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -196,7 +196,7 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: document-intelligence-0.1.0
+        helm.sh/chart: document-intelligence-0.2.1
         app.kubernetes.io/name: document-intelligence
         app.kubernetes.io/instance: document-intelligence
         app.kubernetes.io/version: "4.0"
@@ -220,6 +220,10 @@ spec:
               value: "/logs"
             - name: Logging.Console.LogLevel.Default
               value: "Information"
+            - name: StorageTimeToLiveInMinutes
+              value: "2880"
+            - name: Task:MaxRunningTimeSpanInMinutes
+              value: "60"
           livenessProbe:
             httpGet:
               path: /status
@@ -291,7 +295,7 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: document-intelligence
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -317,7 +321,7 @@ kind: Ingress
 metadata:
   name: document-intelligence
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -344,7 +348,7 @@ kind: VerticalPodAutoscaler
 metadata:
   name: document-intelligence
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"
@@ -374,7 +378,7 @@ kind: Pod
 metadata:
   name: "document-intelligence-test-connection"
   labels:
-    helm.sh/chart: document-intelligence-0.1.0
+    helm.sh/chart: document-intelligence-0.2.1
     app.kubernetes.io/name: document-intelligence
     app.kubernetes.io/instance: document-intelligence
     app.kubernetes.io/version: "4.0"

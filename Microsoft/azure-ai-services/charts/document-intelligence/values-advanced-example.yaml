@@ -1,0 +1,99 @@
+# Advanced Configuration Example for Document Intelligence
+# This file demonstrates all available advanced configuration options
+
+documentIntelligence:
+  modelType: read
+  envSeparator: "_"
+  
+  # Azure configuration for online mode
+  azure:
+    billingEndpoint: "https://your-resource.cognitiveservices.azure.com"
+    apiKey: "your-api-key"
+    downloadLicense: false
+  
+  # License configuration
+  license:
+    mountPath: /license
+    storageSize: 1Gi
+  
+  # Output logs configuration
+  output:
+    mountPath: /logs
+    storageSize: 10Gi
+  
+  # Shared storage for multi-container setups
+  shared:
+    enabled: true
+    mountPath: /share
+    storageSize: 20Gi
+  
+  # Advanced container configuration
+  advanced:
+    # Storage TTL: 1 day (1440 minutes)
+    # Controls how long intermediate and final files are kept
+    # Range: 5 minutes to 10080 minutes (7 days)
+    # Default: 2880 minutes (2 days)
+    storageTimeToLiveInMinutes: 1440
+    
+    # Task timeout: 120 minutes (2 hours)
+    # Maximum running time before request is treated as timeout
+    # Default: 60 minutes
+    taskMaxRunningTimeSpanInMinutes: 120
+    
+    # Memory health check threshold: 20GB
+    # Container reports unhealthy when memory exceeds this value
+    # Leave empty to use container default (same as recommended memory)
+    healthCheckMemoryUpperboundInMB: 20480
+    
+    # Azure Queue connection string (for custom template containers)
+    # Required for distributed processing with Azure Queue
+    # Leave empty to use in-memory queues (default)
+    queueAzureConnectionString: "DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=mykey;EndpointSuffix=core.windows.net"
+    
+    # Azure Blob storage connection string (for custom template containers)
+    # Required for storing models and data in Azure Blob Storage
+    # Leave empty to use local storage (default)
+    storageObjectStoreAzureBlobConnectionString: "DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=mykey;EndpointSuffix=core.windows.net"
+    
+    # HTTP proxy bypass URLs
+    # Comma-separated list of URLs to bypass proxy
+    # Example: "abc.com,xyz.com,localhost"
+    httpProxyBypassUrls: "localhost,127.0.0.1,.internal.domain"
+    
+    # Logging configuration
+    logging:
+      # Console log level options:
+      # - Trace: Most verbose, includes all messages
+      # - Debug: Debug messages and above
+      # - Information: Informational messages and above (default)
+      # - Warning: Warning messages and above
+      # - Error: Error messages and above
+      # - Critical: Only critical messages
+      # - None: No logging
+      consoleLogLevel: "Debug"
+
+# Resource configuration for production workload
+resources:
+  requests:
+    cpu: "8"
+    memory: 16Gi
+  limits:
+    cpu: "8"
+    memory: 24Gi
+
+# Enable autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+# Ingress configuration
+ingress:
+  enabled: true
+  controllerType: azure-loadbalancer
+  hosts:
+    - host: document-intelligence-advanced.example.com
+      paths:
+        - path: /
+          pathType: Prefix

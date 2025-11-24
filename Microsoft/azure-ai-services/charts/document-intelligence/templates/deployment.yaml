@@ -73,7 +73,31 @@ spec:
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
             {{- end }}
             - name: Logging.Console.LogLevel.Default
-              value: "Information"
+              value: {{ .Values.documentIntelligence.advanced.logging.consoleLogLevel | default "Information" | quote }}
+            {{- if .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes }}
+            - name: StorageTimeToLiveInMinutes
+              value: {{ .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes | quote }}
+            {{- end }}
+            {{- if .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes }}
+            - name: Task:MaxRunningTimeSpanInMinutes
+              value: {{ .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes | quote }}
+            {{- end }}
+            {{- if .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB }}
+            - name: HealthCheck:MemoryUpperboundInMB
+              value: {{ .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB | quote }}
+            {{- end }}
+            {{- if .Values.documentIntelligence.advanced.queueAzureConnectionString }}
+            - name: Queue:Azure:ConnectionString
+              value: {{ .Values.documentIntelligence.advanced.queueAzureConnectionString | quote }}
+            {{- end }}
+            {{- if .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString }}
+            - name: Storage:ObjectStore:AzureBlob:ConnectionString
+              value: {{ .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString | quote }}
+            {{- end }}
+            {{- if .Values.documentIntelligence.advanced.httpProxyBypassUrls }}
+            - name: HTTP_PROXY_BYPASS_URLS
+              value: {{ .Values.documentIntelligence.advanced.httpProxyBypassUrls | quote }}
+            {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

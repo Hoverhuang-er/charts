@@ -113,6 +113,51 @@
               "description": "Storage class name"
             }
           }
+        },
+        "advanced": {
+          "type": "object",
+          "properties": {
+            "storageTimeToLiveInMinutes": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 10080,
+              "default": 2880,
+              "description": "TTL duration to remove all intermediate and final files (5 min to 7 days)"
+            },
+            "taskMaxRunningTimeSpanInMinutes": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 60,
+              "description": "Maximum running time for treating request as timeout"
+            },
+            "healthCheckMemoryUpperboundInMB": {
+              "type": ["string", "integer"],
+              "description": "Memory threshold for reporting unhealthy to liveness"
+            },
+            "queueAzureConnectionString": {
+              "type": "string",
+              "description": "Azure Queue connection string"
+            },
+            "storageObjectStoreAzureBlobConnectionString": {
+              "type": "string",
+              "description": "Azure Blob storage connection string"
+            },
+            "httpProxyBypassUrls": {
+              "type": "string",
+              "description": "HTTP proxy bypass URLs"
+            },
+            "logging": {
+              "type": "object",
+              "properties": {
+                "consoleLogLevel": {
+                  "type": "string",
+                  "enum": ["Trace", "Debug", "Information", "Warning", "Error", "Critical", "None"],
+                  "default": "Information",
+                  "description": "Console log level"
+                }
+              }
+            }
+          }
         }
       }
     },

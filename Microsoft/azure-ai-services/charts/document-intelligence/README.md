@@ -125,6 +125,20 @@ See [LICENSE-FILE-USAGE.md](LICENSE-FILE-USAGE.md) for detailed instructions and
 | `service.type` | Kubernetes service type | `ClusterIP` |
 | `service.port` | Service port | `5000` |
 
+### Advanced Configuration Parameters
+
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| `documentIntelligence.advanced.storageTimeToLiveInMinutes` | TTL for intermediate/final files | `2880` (2 days) | 5-10080 min |
+| `documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes` | Request timeout threshold | `60` | 1+ min |
+| `documentIntelligence.advanced.healthCheckMemoryUpperboundInMB` | Memory health check threshold | auto | MB |
+| `documentIntelligence.advanced.queueAzureConnectionString` | Azure Queue connection (custom template) | `""` | - |
+| `documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString` | Azure Blob connection (custom template) | `""` | - |
+| `documentIntelligence.advanced.httpProxyBypassUrls` | Proxy bypass URLs | `""` | CSV |
+| `documentIntelligence.advanced.logging.consoleLogLevel` | Console log level | `Information` | See below |
+
+**Log Levels**: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`
+
 ### Example: Deploy Invoice Model
 
 ```bash
@@ -243,6 +257,34 @@ helm install document-intelligence ./document-intelligence \
   --set documentIntelligence.output.existingClaim="my-output-pvc"
 ```
 
+### Advanced Configuration Examples
+
+#### Configure Storage TTL and Task Timeout
+
+```bash
+helm install document-intelligence ./document-intelligence \
+  --set documentIntelligence.advanced.storageTimeToLiveInMinutes=1440 \
+  --set documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes=120 \
+  --set documentIntelligence.advanced.logging.consoleLogLevel="Debug"
+```
+
+#### Configure with Azure Queue and Blob Storage (Custom Template)
+
+```bash
+helm install document-intelligence ./document-intelligence \
+  --set documentIntelligence.modelType=customTemplate \
+  --set documentIntelligence.advanced.queueAzureConnectionString="DefaultEndpointsProtocol=https;..." \
+  --set documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString="DefaultEndpointsProtocol=https;..."
+```
+
+#### Use Advanced Configuration File
+
+See `values-advanced-example.yaml` for a complete example with all advanced parameters.
+
+```bash
+helm install document-intelligence ./document-intelligence -f values-advanced-example.yaml
+```
+
 ### Custom values.yaml
 
 Create a `my-values.yaml` file:
@@ -264,6 +306,13 @@ documentIntelligence:
   output:
     storageSize: 10Gi
     storageClassName: "fast-ssd"
+  
+  # Advanced configuration
+  advanced:
+    storageTimeToLiveInMinutes: 1440  # 1 day
+    taskMaxRunningTimeSpanInMinutes: 90
+    logging:
+      consoleLogLevel: "Warning"
 
 resources:
   requests:
