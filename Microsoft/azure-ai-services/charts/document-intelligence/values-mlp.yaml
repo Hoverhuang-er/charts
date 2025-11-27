@@ -89,6 +89,25 @@ documentIntelligence:
     # Example: "abc.com,xyz.com"
     httpProxyBypassUrls: ""
     
+    # Performance tuning parameters (disabled by default)
+    # These parameters can improve throughput for high-volume scenarios
+    # See values-advanced-example.yaml for recommended production settings
+    performance:
+      # OneOCR concurrency level - controls parallel OCR operations
+      # Leave empty to use container default
+      # Recommended range: 4-16 (higher values need more CPU/memory)
+      oneOcrConcurrency: ""
+      
+      # OCR worker thread pool size - number of worker threads
+      # Leave empty to use container default
+      # Recommended range: 2-8 (adjust based on CPU cores)
+      ocrWorkerThreadPoolSize: ""
+      
+      # Queue priority extra concurrent worker count
+      # Leave empty to use container default
+      # Recommended range: 0-4 (for high-priority request handling)
+      queuePriorityExtraConcurrentWorkerCount: ""
+    
     # Logging configuration
     logging:
       # Console log level: Trace, Debug, Information, Warning, Error, Critical, None

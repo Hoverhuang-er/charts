@@ -135,9 +135,14 @@ See [LICENSE-FILE-USAGE.md](LICENSE-FILE-USAGE.md) for detailed instructions and
 | `documentIntelligence.advanced.queueAzureConnectionString` | Azure Queue connection (custom template) | `""` | - |
 | `documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString` | Azure Blob connection (custom template) | `""` | - |
 | `documentIntelligence.advanced.httpProxyBypassUrls` | Proxy bypass URLs | `""` | CSV |
+| `documentIntelligence.advanced.performance.oneOcrConcurrency` | OneOCR parallel operations | `""` (auto) | 4-16 |
+| `documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize` | OCR worker threads | `""` (auto) | 2-8 |
+| `documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount` | Priority queue workers | `""` (auto) | 0-4 |
 | `documentIntelligence.advanced.logging.consoleLogLevel` | Console log level | `Information` | See below |
 
 **Log Levels**: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`
+
+**Performance Tuning**: The performance parameters (`oneOcrConcurrency`, `ocrWorkerThreadPoolSize`, `queuePriorityExtraConcurrentWorkerCount`) are disabled by default for optimal resource usage. Enable them for high-volume scenarios. See `values-advanced-example.yaml` for recommended settings.
 
 ### Example: Deploy Invoice Model
 
@@ -267,6 +272,17 @@ helm install document-intelligence ./document-intelligence \
   --set documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes=120 \
   --set documentIntelligence.advanced.logging.consoleLogLevel="Debug"
 ```
+
+#### Configure Performance Tuning for High-Volume Scenarios
+
+```bash
+helm install document-intelligence ./document-intelligence \
+  --set documentIntelligence.advanced.performance.oneOcrConcurrency=8 \
+  --set documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize=3 \
+  --set documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount=1
+```
+
+**Note**: Performance tuning increases resource usage. Ensure sufficient CPU and memory are allocated.
 
 #### Configure with Azure Queue and Blob Storage (Custom Template)
 

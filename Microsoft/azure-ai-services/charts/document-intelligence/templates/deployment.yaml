@@ -98,6 +98,18 @@ spec:
             - name: HTTP_PROXY_BYPASS_URLS
               value: {{ .Values.documentIntelligence.advanced.httpProxyBypassUrls | quote }}
             {{- end }}
+            {{- if .Values.documentIntelligence.advanced.performance.oneOcrConcurrency }}
+            - name: ONEOCR_CONCURRENCY
+              value: {{ .Values.documentIntelligence.advanced.performance.oneOcrConcurrency | quote }}
+            {{- end }}
+            {{- if .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize }}
+            - name: OcrWorker__ThreadPoolSize
+              value: {{ .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize | quote }}
+            {{- end }}
+            {{- if .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount }}
+            - name: Queue:Priority:ExtraConcurrentWorkerCount
+              value: {{ .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount | quote }}
+            {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

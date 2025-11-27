@@ -146,6 +146,29 @@
               "type": "string",
               "description": "HTTP proxy bypass URLs"
             },
+            "performance": {
+              "type": "object",
+              "properties": {
+                "oneOcrConcurrency": {
+                  "type": ["string", "integer"],
+                  "minimum": 1,
+                  "maximum": 32,
+                  "description": "OneOCR concurrency level for parallel operations"
+                },
+                "ocrWorkerThreadPoolSize": {
+                  "type": ["string", "integer"],
+                  "minimum": 1,
+                  "maximum": 16,
+                  "description": "OCR worker thread pool size"
+                },
+                "queuePriorityExtraConcurrentWorkerCount": {
+                  "type": ["string", "integer"],
+                  "minimum": 0,
+                  "maximum": 8,
+                  "description": "Queue priority extra concurrent worker count"
+                }
+              }
+            },
             "logging": {
               "type": "object",
               "properties": {
