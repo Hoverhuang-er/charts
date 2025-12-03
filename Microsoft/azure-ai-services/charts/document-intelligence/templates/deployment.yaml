@@ -62,36 +62,43 @@ spec:
             - name: DownloadLicense
               value: "True"
             {{- end }}
-            - name: Mounts{{ .Values.documentIntelligence.envSeparator | default "_" }}License
+            # Mount path environment variables using configurable separator (default: __)
+            # Note: Kubernetes env var names must be alphanumeric or underscore only
+            - name: {{ printf "Mounts%sLicense" (.Values.documentIntelligence.envSeparator | default "__") }}
               value: {{ .Values.documentIntelligence.license.mountPath | quote }}
-            - name: Mounts{{ .Values.documentIntelligence.envSeparator | default "_" }}Output
+            - name: {{ printf "Mounts%sOutput" (.Values.documentIntelligence.envSeparator | default "__") }}
               value: {{ .Values.documentIntelligence.output.mountPath | quote }}
             {{- if .Values.documentIntelligence.shared.enabled }}
             - name: SharedRootFolder
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
-            - name: Mounts{{ .Values.documentIntelligence.envSeparator | default "_" }}Shared
+            - name: {{ printf "Mounts%sShared" (.Values.documentIntelligence.envSeparator | default "__") }}
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
             {{- end }}
-            - name: Logging.Console.LogLevel.Default
+            # Logging configuration uses dot notation (preserved for Azure container compatibility)
+            - name: "Logging.Console.LogLevel.Default"
               value: {{ .Values.documentIntelligence.advanced.logging.consoleLogLevel | default "Information" | quote }}
             {{- if .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes }}
             - name: StorageTimeToLiveInMinutes
               value: {{ .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes }}
-            - name: Task:MaxRunningTimeSpanInMinutes
+            # Environment variable with colon - requires quoted syntax for Kubernetes compatibility
+            - name: "Task:MaxRunningTimeSpanInMinutes"
               value: {{ .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB }}
-            - name: HealthCheck:MemoryUpperboundInMB
+            # Environment variable with colon - requires quoted syntax for Kubernetes compatibility
+            - name: "HealthCheck:MemoryUpperboundInMB"
               value: {{ .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.queueAzureConnectionString }}
-            - name: Queue:Azure:ConnectionString
+            # Environment variable with colons - requires quoted syntax for Kubernetes compatibility
+            - name: "Queue:Azure:ConnectionString"
               value: {{ .Values.documentIntelligence.advanced.queueAzureConnectionString | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString }}
-            - name: Storage:ObjectStore:AzureBlob:ConnectionString
+            # Environment variable with colons - requires quoted syntax for Kubernetes compatibility
+            - name: "Storage:ObjectStore:AzureBlob:ConnectionString"
               value: {{ .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.httpProxyBypassUrls }}
@@ -103,11 +110,13 @@ spec:
               value: {{ .Values.documentIntelligence.advanced.performance.oneOcrConcurrency | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize }}
-            - name: OcrWorker__ThreadPoolSize
+            # Environment variable with double underscores - valid for Kubernetes
+            - name: "OcrWorker__ThreadPoolSize"
               value: {{ .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount }}
-            - name: Queue:Priority:ExtraConcurrentWorkerCount
+            # Environment variable with colons - requires quoted syntax for Kubernetes compatibility
+            - name: "Queue:Priority:ExtraConcurrentWorkerCount"
               value: {{ .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount | quote }}
             {{- end }}
           {{- with .Values.livenessProbe }}

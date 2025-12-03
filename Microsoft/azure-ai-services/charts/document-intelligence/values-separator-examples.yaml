@@ -2,43 +2,49 @@
 # This file demonstrates different separator configurations
 
 ---
-# Example 1: Using underscore (default)
+# Example 1: Using double underscore (default, recommended)
+# Generates: Mounts__License, Mounts__Output, Mounts__Shared
+# This is the safest option for Kubernetes compatibility
+documentIntelligence:
+  envSeparator: "__"
+
+---
+# Example 2: Using single underscore
 # Generates: Mounts_License, Mounts_Output, Mounts_Shared
+# Note: May cause issues in some Helm versions
 documentIntelligence:
   envSeparator: "_"
 
 ---
-# Example 2: Using dot
+# Example 3: Using dot
 # Generates: Mounts.License, Mounts.Output, Mounts.Shared
 # Note: Some Kubernetes versions may reject dots in environment variable names
 documentIntelligence:
   envSeparator: "."
 
 ---
-# Example 3: Using hyphen
+# Example 4: Using hyphen
 # Generates: Mounts-License, Mounts-Output, Mounts-Shared
 documentIntelligence:
   envSeparator: "-"
 
 ---
-# Example 4: Using colon
-# Generates: Mounts:License, Mounts:Output, Mounts:Shared
-# Note: Some Kubernetes versions may reject colons in environment variable names
-documentIntelligence:
-  envSeparator: ":"
-
----
+# IMPORTANT: Colon (:) is NOT supported
+# Kubernetes does not allow colons in environment variable names when used without quotes.
+# The Azure container expects specific environment variables with colons (like Task:MaxRunningTimeSpanInMinutes),
+# which are hardcoded and quoted in the deployment template.
+#
 # To use a specific separator, create a custom values file or override during installation:
 #
 # Method 1: Create custom-values.yaml
 # documentIntelligence:
-#   envSeparator: "-"
+#   envSeparator: "__"
 #
 # Then install with:
 # helm install my-release . -f custom-values.yaml
 #
 # Method 2: Override during installation
-# helm install my-release . --set documentIntelligence.envSeparator="-"
+# helm install my-release . --set documentIntelligence.envSeparator="__"
 #
 # Method 3: Combine with other values files
-# helm install my-release . -f values-mlp.yaml --set documentIntelligence.envSeparator=":"
+# helm install my-release . -f values-mlp.yaml --set documentIntelligence.envSeparator="__"

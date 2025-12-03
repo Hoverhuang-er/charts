@@ -108,7 +108,7 @@ See [LICENSE-FILE-USAGE.md](LICENSE-FILE-USAGE.md) for detailed instructions and
 | `image.repository` | Container image repository | `mcr.microsoft.com/azure-cognitive-services/form-recognizer/read-4.0` |
 | `image.tag` | Container image tag | `latest` |
 | `documentIntelligence.modelType` | Model type (read, layout, invoice, etc.) | `read` |
-| `documentIntelligence.envSeparator` | Separator for mount env vars (_, ., :, -) | `_` |
+| `documentIntelligence.envSeparator` | Separator for mount env vars (__, _, ., -) | `__` |
 | `documentIntelligence.azure.billingEndpoint` | Azure billing endpoint (for license download) | `""` |
 | `documentIntelligence.azure.apiKey` | Azure API key (for license download) | `""` |
 | `documentIntelligence.azure.downloadLicense` | Enable license download mode | `false` |
@@ -211,14 +211,27 @@ helm install document-intelligence ./document-intelligence \
 
 ### Environment Variable Separator Configuration
 
-The chart allows you to customize the separator character used in mount-related environment variables (`Mounts_License`, `Mounts_Output`, `Mounts_Shared`). This is useful for compatibility with different Azure AI Services container versions.
+The chart allows you to customize the separator character used in mount-related environment variables (`Mounts__License`, `Mounts__Output`, `Mounts__Shared`). This is useful for compatibility with different Azure AI Services container versions.
 
-**Default**: underscore (`_`)
-- Generates: `Mounts_License`, `Mounts_Output`, `Mounts_Shared`
+**Default**: double underscore (`__`) - **Recommended for Kubernetes compatibility**
+- Generates: `Mounts__License`, `Mounts__Output`, `Mounts__Shared`
 
-**Available options**: `_` (underscore), `.` (dot), `-` (hyphen), `:` (colon)
+**Available options**: `__` (double underscore, default), `_` (single underscore), `.` (dot), `-` (hyphen)
 
-⚠️ **Note**: Some Kubernetes versions may have restrictions on certain characters in environment variable names. Dot (`.`) and colon (`:`) may cause issues in older Kubernetes versions.
+⚠️ **Important Notes**:
+- **Colon (`:`) is NOT supported** for user-configurable separators due to Kubernetes restrictions
+- Some Azure container environment variables use colons (e.g., `Task:MaxRunningTimeSpanInMinutes`) - these are hardcoded in the deployment template with proper quoting
+- Dot (`.`) may cause issues in older Kubernetes versions
+- Double underscore (`__`) is the safest and recommended option
+
+#### Using Single Underscore
+
+```bash
+helm install document-intelligence ./document-intelligence \
+  --set documentIntelligence.envSeparator="_"
+# Generates: Mounts_License, Mounts_Output, Mounts_Shared
+# Note: May cause Helm rendering issues in some versions
+```
 
 #### Using Hyphen
 
@@ -236,20 +249,13 @@ helm install document-intelligence ./document-intelligence \
 # Generates: Mounts.License, Mounts.Output, Mounts.Shared
 ```
 
-#### Using Colon
-
-```bash
-helm install document-intelligence ./document-intelligence \
-  --set documentIntelligence.envSeparator=":"
-# Generates: Mounts:License, Mounts:Output, Mounts:Shared
-```
-
 #### In values.yaml
 
 ```yaml
 documentIntelligence:
-  envSeparator: "_"  # Default: underscore
-  # Other options: ".", "-", ":"
+  envSeparator: "__"  # Default: double underscore (recommended)
+  # Other options: "_", ".", "-"
+  # Note: Colon ":" is NOT supported
 ```
 
 ### Using Existing PVCs

@@ -22,9 +22,9 @@
         },
         "envSeparator": {
           "type": "string",
-          "pattern": "^[._:\\-]$",
-          "default": "_",
-          "description": "Separator character for mount environment variables (e.g., Mounts_License). Options: _ . : -"
+          "pattern": "^(__)|(_)|(\\.)|(-)$",
+          "default": "__",
+          "description": "Separator character for mount environment variables (e.g., Mounts__License). Options: __ (double underscore), _ (single underscore), . (dot), - (hyphen). Note: Colon not supported in Kubernetes."
         },
         "azure": {
           "type": "object",
