@@ -1,0 +1,237 @@
+# Helm Chart Testing Workflow
+# Mock testing for Helm charts before publishing
+
+name: Helm Chart Tests
+
+on:
+  pull_request:
+    paths:
+      - 'Microsoft/azure-ai-services/charts/**'
+      - 'OpenSources/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'Microsoft/azure-ai-services/charts/**'
+      - 'OpenSources/**'
+
+permissions:
+  contents: read
+
+jobs:
+  lint-charts:
+    name: Lint Charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chart:
+          - path: Microsoft/azure-ai-services/charts/content-safety
+          - path: Microsoft/azure-ai-services/charts/document-intelligence
+          - path: OpenSources/magentic-ui
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Lint chart
+        run: |
+          helm lint ${{ matrix.chart.path }}
+
+  template-charts:
+    name: Template Charts
+    runs-on: ubuntu-latest
+    needs: lint-charts
+    strategy:
+      matrix:
+        chart:
+          - path: Microsoft/azure-ai-services/charts/content-safety
+          - path: Microsoft/azure-ai-services/charts/document-intelligence
+          - path: OpenSources/magentic-ui
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Template chart
+        run: |
+          helm template test-release ${{ matrix.chart.path }} --debug
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint-charts
+    strategy:
+      matrix:
+        chart:
+          - path: Microsoft/azure-ai-services/charts/content-safety
+          - path: Microsoft/azure-ai-services/charts/document-intelligence
+          - path: OpenSources/magentic-ui
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Install kuttl for Kubernetes testing
+        run: |
+          curl -L https://github.com/kudobuilder/kuttl/releases/download/v0.15.0/kuttl_0.15.0_linux_x86_64 -o kuttl
+          chmod +x kuttl
+          sudo mv kuttl /usr/local/bin/
+
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1.9.0
+        with:
+          cluster_name: chart-testing
+          wait: 120s
+
+      - name: Build chart dependencies
+        run: |
+          helm dependency update ${{ matrix.chart.path }} || echo "No dependencies found"
+
+      - name: Install chart for testing
+        run: |
+          helm install test-release ${{ matrix.chart.path }} --wait --timeout 5m --debug
+
+      - name: Run Helm tests
+        run: |
+          helm test test-release --timeout 5m --logs
+
+      - name: Uninstall chart
+        if: always()
+        run: |
+          helm uninstall test-release || true
+
+  full-install-test:
+    name: Full Install Test - document-intelligence
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint-charts, template-charts, unit-tests]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.29.0
+
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1.9.0
+        with:
+          cluster_name: doc-intel-test
+          wait: 180s
+          kubectl_version: v1.29.0
+
+      - name: Build chart dependencies
+        run: |
+          helm dependency update Microsoft/azure-ai-services/charts/document-intelligence || echo "No dependencies found"
+
+      - name: Install chart with default values
+        run: |
+          helm install doc-intel Microsoft/azure-ai-services/charts/document-intelligence \
+            --wait --timeout 10m --debug --atomic
+
+      - name: Verify deployment
+        run: |
+          echo "=== Checking deployment status ==="
+          kubectl get deployments -l app.kubernetes.io/name=azure-ai-services -o wide
+          echo ""
+          echo "=== Checking pods ==="
+          kubectl get pods -l app.kubernetes.io/name=azure-ai-services -o wide
+          echo ""
+          echo "=== Checking services ==="
+          kubectl get svc -l app.kubernetes.io/name=azure-ai-services -o wide
+
+      - name: Run Helm tests
+        id: helm-test
+        run: |
+          echo "=== Running Helm unit tests ==="
+          helm test doc-intel --timeout 5m --logs || {
+            echo "::error::Helm tests failed"
+            exit 1
+          }
+        continue-on-error: true
+
+      - name: Upgrade chart with modified values
+        run: |
+          cat <<EOF > test-values.yaml
+          replicaCount: 2
+          documentIntelligence:
+            modelType: layout
+            advanced:
+              storageTimeToLiveInMinutes: 1440
+          EOF
+          helm upgrade doc-intel Microsoft/azure-ai-services/charts/document-intelligence \
+            --values test-values.yaml --wait --timeout 10m --debug --atomic
+
+      - name: Verify upgrade
+        run: |
+          echo "=== Verifying upgrade ==="
+          kubectl get deployments -l app.kubernetes.io/name=azure-ai-services -o wide
+          kubectl get pods -l app.kubernetes.io/name=azure-ai-services -o wide
+
+      - name: Run Helm tests after upgrade
+        id: helm-test-upgrade
+        run: |
+          echo "=== Running Helm tests after upgrade ==="
+          helm test doc-intel --timeout 5m --logs || {
+            echo "::error::Helm tests after upgrade failed"
+            exit 1
+          }
+        continue-on-error: true
+
+      - name: Display Helm release status
+        run: |
+          echo "=== Helm release status ==="
+          helm status doc-intel --show-resources
+
+      - name: Display pod logs
+        if: always()
+        run: |
+          echo "=== Collecting pod logs ==="
+          POD=$(kubectl get pods -l app.kubernetes.io/name=azure-ai-services -o jsonpath='{.items[0].metadata.name}')
+          if [ -n "$POD" ]; then
+            kubectl logs "$POD" --tail=100 || echo "Failed to get logs"
+          fi
+
+      - name: Uninstall chart
+        if: always()
+        run: |
+          helm uninstall doc-intel || true
+
+      - name: Test Results Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "HELM UNIT TEST RESULTS SUMMARY"
+          echo "=========================================="
+          echo ""
+          if [ "${{ steps.helm-test.outcome }}" == "success" ]; then
+            echo "✅ Initial Helm Tests: PASSED"
+          else
+            echo "❌ Initial Helm Tests: FAILED"
+          fi
+          echo ""
+          if [ "${{ steps.helm-test-upgrade.outcome }}" == "success" ]; then
+            echo "✅ Post-Upgrade Helm Tests: PASSED"
+          else
+            echo "❌ Post-Upgrade Helm Tests: FAILED"
+          fi
+          echo ""
+          echo "=========================================="

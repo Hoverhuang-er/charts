@@ -1,3 +1,4 @@
+# Test: Verify service connectivity and health endpoint
 apiVersion: v1
 kind: Pod
 metadata:
@@ -6,10 +7,16 @@ metadata:
     {{- include "azure-ai-services.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   containers:
-    - name: wget
-      image: busybox
-      command: ['wget']
-      args: ['{{ include "azure-ai-services.fullname" . }}:{{ .Values.service.port }}']
+    - name: curl
+      image: curlimages/curl:latest
+      command: ['sh', '-c']
+      args:
+        - |
+          echo "Testing service connectivity..."
+          # Test HTTP endpoint is reachable
+          curl -f --connect-timeout 10 http://{{ include "azure-ai-services.fullname" . }}:{{ .Values.service.port }}/status || exit 1
+          echo "Service connectivity test passed"
   restartPolicy: Never
