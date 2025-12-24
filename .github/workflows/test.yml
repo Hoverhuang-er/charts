@@ -19,15 +19,9 @@ permissions:
   contents: read
 
 jobs:
-  lint-charts:
-    name: Lint Charts
+  lint-content-safety:
+    name: Lint Content Safety
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        chart:
-          - path: Microsoft/azure-ai-services/charts/content-safety
-          - path: Microsoft/azure-ai-services/charts/document-intelligence
-          - path: OpenSources/magentic-ui
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -40,22 +34,76 @@ jobs:
       - name: Lint chart
         id: lint
         run: |
-          echo "=== Linting chart: ${{ matrix.chart.path }} ==="
+          echo "=== Linting chart: Microsoft/azure-ai-services/charts/content-safety ==="
           mkdir -p lint-reports
-          helm lint ${{ matrix.chart.path }} 2>&1 | tee lint-reports/${{ matrix.chart.path }}.log
+          helm lint Microsoft/azure-ai-services/charts/content-safety 2>&1 | tee lint-reports/content-safety.log
           echo "exit_code=$?" >> $GITHUB_OUTPUT
 
       - name: Upload lint report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-report-${{ matrix.chart.path }}
+          name: lint-report-content-safety
+          path: lint-reports/
+
+  lint-document-intelligence:
+    name: Lint Document Intelligence
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Lint chart
+        id: lint
+        run: |
+          echo "=== Linting chart: Microsoft/azure-ai-services/charts/document-intelligence ==="
+          mkdir -p lint-reports
+          helm lint Microsoft/azure-ai-services/charts/document-intelligence 2>&1 | tee lint-reports/document-intelligence.log
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report-document-intelligence
+          path: lint-reports/
+
+  lint-magentic-ui:
+    name: Lint Magentic UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Lint chart
+        id: lint
+        run: |
+          echo "=== Linting chart: OpenSources/magentic-ui ==="
+          mkdir -p lint-reports
+          helm lint OpenSources/magentic-ui 2>&1 | tee lint-reports/magentic-ui.log
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report-magentic-ui
           path: lint-reports/
 
   lint-summary:
     name: Lint Summary
     runs-on: ubuntu-latest
-    needs: lint-charts
+    needs: [lint-content-safety, lint-document-intelligence, lint-magentic-ui]
     if: always()
     steps:
       - name: Download all lint reports
@@ -70,10 +118,10 @@ jobs:
           echo "## Lint Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          for report in lint-reports/*/Microsoft/*/content-safety.log lint-reports/*/Microsoft/*/document-intelligence.log lint-reports/*/OpenSources/magentic-ui.log; do
+          for chart in content-safety document-intelligence magentic-ui; do
+            report=$(find lint-reports -name "${chart}.log" 2>/dev/null | head -1)
             if [ -f "$report" ]; then
-              chart_name=$(echo "$report" | sed 's|.*/\(.*\)\.log|\1|')
-              echo "### $chart_name" >> $GITHUB_STEP_SUMMARY
+              echo "### $chart" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
               cat "$report" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
@@ -88,8 +136,9 @@ jobs:
   template-charts:
     name: Template Charts
     runs-on: ubuntu-latest
-    needs: lint-charts
+    needs: [lint-content-safety, lint-document-intelligence, lint-magentic-ui]
     strategy:
+      fail-fast: false
       matrix:
         chart:
           - path: Microsoft/azure-ai-services/charts/content-safety
@@ -111,8 +160,9 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    needs: lint-charts
+    needs: [lint-content-safety, lint-document-intelligence, lint-magentic-ui]
     strategy:
+      fail-fast: false
       matrix:
         chart:
           - path: Microsoft/azure-ai-services/charts/content-safety
@@ -160,7 +210,7 @@ jobs:
     name: Full Install Test - document-intelligence
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [lint-charts, template-charts, unit-tests]
+    needs: [lint-content-safety, lint-document-intelligence, lint-magentic-ui, template-charts, unit-tests]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
