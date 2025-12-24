@@ -73,42 +73,57 @@ spec:
             - name: {{ include "azure-ai-services.mountEnvName" (dict "separator" .Values.documentIntelligence.envSeparator "suffix" "Shared") }}
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
             {{- end }}
-            # Logging configuration uses dot notation (preserved for Azure container compatibility)
+            # Logging configuration (Azure format with dot notation, valid for Kubernetes env vars)
             - name: {{ include "azure-ai-services.envName" "Logging.Console.LogLevel.Default" }}
               value: {{ .Values.documentIntelligence.advanced.logging.consoleLogLevel | default "Information" | quote }}
             {{- if .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes }}
+            # Storage TTL configuration (single word, valid for Kubernetes env vars)
             - name: StorageTimeToLiveInMinutes
               value: {{ .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes }}
+            # Task max running time (Azure format with colon, converted to underscore for Kubernetes)
+            # Original: Task:MaxRunningTimeSpanInMinutes -> Kubernetes: Task_MaxRunningTimeSpanInMinutes
             - name: {{ include "azure-ai-services.envName" "Task:MaxRunningTimeSpanInMinutes" }}
               value: {{ .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB }}
+            # Health check memory upper bound (Azure format with colon, converted to underscore for Kubernetes)
+            # Original: HealthCheck:MemoryUpperboundInMB -> Kubernetes: HealthCheck_MemoryUpperboundInMB
             - name: {{ include "azure-ai-services.envName" "HealthCheck:MemoryUpperboundInMB" }}
               value: {{ .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.queueAzureConnectionString }}
+            # Queue connection string (Azure format with multiple colons, converted to underscores for Kubernetes)
+            # Original: Queue:Azure:ConnectionString -> Kubernetes: Queue_Azure_ConnectionString
             - name: {{ include "azure-ai-services.envName" "Queue:Azure:ConnectionString" }}
               value: {{ .Values.documentIntelligence.advanced.queueAzureConnectionString | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString }}
+            # Storage connection string (Azure format with multiple colons, converted to underscores for Kubernetes)
+            # Original: Storage:ObjectStore:AzureBlob:ConnectionString -> Kubernetes: Storage_ObjectStore_AzureBlob_ConnectionString
             - name: {{ include "azure-ai-services.envName" "Storage:ObjectStore:AzureBlob:ConnectionString" }}
               value: {{ .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.httpProxyBypassUrls }}
+            # HTTP proxy bypass URLs (uppercase with underscore, valid for Kubernetes env vars)
             - name: HTTP_PROXY_BYPASS_URLS
               value: {{ .Values.documentIntelligence.advanced.httpProxyBypassUrls | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.performance.oneOcrConcurrency }}
+            # OCR concurrency (uppercase, valid for Kubernetes env vars)
             - name: ONEOCR_CONCURRENCY
               value: {{ .Values.documentIntelligence.advanced.performance.oneOcrConcurrency | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize }}
+            # OCR worker thread pool size (Azure format with double underscore, converted to single underscore for Kubernetes)
+            # Original: OcrWorker__ThreadPoolSize -> Kubernetes: OcrWorker_ThreadPoolSize
             - name: {{ include "azure-ai-services.envName" "OcrWorker__ThreadPoolSize" }}
               value: {{ .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount }}
+            # Queue priority extra worker count (Azure format with multiple colons, converted to underscores for Kubernetes)
+            # Original: Queue:Priority:ExtraConcurrentWorkerCount -> Kubernetes: Queue_Priority_ExtraConcurrentWorkerCount
             - name: {{ include "azure-ai-services.envName" "Queue:Priority:ExtraConcurrentWorkerCount" }}
               value: {{ .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount | quote }}
             {{- end }}

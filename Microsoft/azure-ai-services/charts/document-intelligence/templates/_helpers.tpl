@@ -63,16 +63,15 @@ Create the name of the service account to use
 
 {{/*
 Convert environment variable name to Kubernetes-safe format
-Checks if name contains special characters (., :, /, -) and wraps in quotes if needed
+Replaces invalid characters (:) with _ and reduces double underscores to single underscore
+Kubernetes env var names only allow: letters, digits, '_', '-', '.' (cannot start with digit)
 This preserves Azure container compatibility while satisfying Kubernetes requirements
 */}}
 {{- define "azure-ai-services.envName" -}}
 {{- $name := . -}}
-{{- if or (contains "." $name) (contains ":" $name) (contains "/" $name) (contains "-" $name) -}}
-{{- printf "\"%s\"" $name -}}
-{{- else -}}
+{{- $name = replace ":" "_" $name -}}
+{{- $name = replace "__" "_" $name -}}
 {{- $name -}}
-{{- end -}}
 {{- end }}
 
 {{/*
