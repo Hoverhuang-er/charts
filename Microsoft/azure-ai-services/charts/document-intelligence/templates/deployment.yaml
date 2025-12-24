@@ -63,42 +63,37 @@ spec:
               value: "True"
             {{- end }}
             # Mount path environment variables using configurable separator (default: __)
-            # Note: Kubernetes env var names must be alphanumeric or underscore only
-            - name: {{ printf "Mounts%sLicense" (.Values.documentIntelligence.envSeparator | default "__") }}
+            - name: {{ include "azure-ai-services.mountEnvName" (dict "separator" .Values.documentIntelligence.envSeparator "suffix" "License") }}
               value: {{ .Values.documentIntelligence.license.mountPath | quote }}
-            - name: {{ printf "Mounts%sOutput" (.Values.documentIntelligence.envSeparator | default "__") }}
+            - name: {{ include "azure-ai-services.mountEnvName" (dict "separator" .Values.documentIntelligence.envSeparator "suffix" "Output") }}
               value: {{ .Values.documentIntelligence.output.mountPath | quote }}
             {{- if .Values.documentIntelligence.shared.enabled }}
             - name: SharedRootFolder
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
-            - name: {{ printf "Mounts%sShared" (.Values.documentIntelligence.envSeparator | default "__") }}
+            - name: {{ include "azure-ai-services.mountEnvName" (dict "separator" .Values.documentIntelligence.envSeparator "suffix" "Shared") }}
               value: {{ .Values.documentIntelligence.shared.mountPath | quote }}
             {{- end }}
             # Logging configuration uses dot notation (preserved for Azure container compatibility)
-            - name: "Logging.Console.LogLevel.Default"
+            - name: {{ include "azure-ai-services.envName" "Logging.Console.LogLevel.Default" }}
               value: {{ .Values.documentIntelligence.advanced.logging.consoleLogLevel | default "Information" | quote }}
             {{- if .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes }}
             - name: StorageTimeToLiveInMinutes
               value: {{ .Values.documentIntelligence.advanced.storageTimeToLiveInMinutes | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes }}
-            # Environment variable with colon - requires quoted syntax for Kubernetes compatibility
-            - name: "Task:MaxRunningTimeSpanInMinutes"
+            - name: {{ include "azure-ai-services.envName" "Task:MaxRunningTimeSpanInMinutes" }}
               value: {{ .Values.documentIntelligence.advanced.taskMaxRunningTimeSpanInMinutes | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB }}
-            # Environment variable with colon - requires quoted syntax for Kubernetes compatibility
-            - name: "HealthCheck:MemoryUpperboundInMB"
+            - name: {{ include "azure-ai-services.envName" "HealthCheck:MemoryUpperboundInMB" }}
               value: {{ .Values.documentIntelligence.advanced.healthCheckMemoryUpperboundInMB | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.queueAzureConnectionString }}
-            # Environment variable with colons - requires quoted syntax for Kubernetes compatibility
-            - name: "Queue:Azure:ConnectionString"
+            - name: {{ include "azure-ai-services.envName" "Queue:Azure:ConnectionString" }}
               value: {{ .Values.documentIntelligence.advanced.queueAzureConnectionString | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString }}
-            # Environment variable with colons - requires quoted syntax for Kubernetes compatibility
-            - name: "Storage:ObjectStore:AzureBlob:ConnectionString"
+            - name: {{ include "azure-ai-services.envName" "Storage:ObjectStore:AzureBlob:ConnectionString" }}
               value: {{ .Values.documentIntelligence.advanced.storageObjectStoreAzureBlobConnectionString | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.httpProxyBypassUrls }}
@@ -110,13 +105,11 @@ spec:
               value: {{ .Values.documentIntelligence.advanced.performance.oneOcrConcurrency | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize }}
-            # Environment variable with double underscores - valid for Kubernetes
-            - name: "OcrWorker__ThreadPoolSize"
+            - name: {{ include "azure-ai-services.envName" "OcrWorker__ThreadPoolSize" }}
               value: {{ .Values.documentIntelligence.advanced.performance.ocrWorkerThreadPoolSize | quote }}
             {{- end }}
             {{- if .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount }}
-            # Environment variable with colons - requires quoted syntax for Kubernetes compatibility
-            - name: "Queue:Priority:ExtraConcurrentWorkerCount"
+            - name: {{ include "azure-ai-services.envName" "Queue:Priority:ExtraConcurrentWorkerCount" }}
               value: {{ .Values.documentIntelligence.advanced.performance.queuePriorityExtraConcurrentWorkerCount | quote }}
             {{- end }}
           {{- with .Values.livenessProbe }}

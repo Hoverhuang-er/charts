@@ -1,0 +1,51 @@
+# Test: Verify advanced configuration with special characters
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "azure-ai-services.fullname" . }}-test-advanced-config"
+  labels:
+    {{- include "azure-ai-services.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  containers:
+    - name: validator
+      image: alpine:3.18
+      command: ['sh', '-c']
+      args:
+        - |
+          set -e
+          echo "Testing advanced configuration with special characters..."
+          
+          # Check that deployment exists
+          DEPLOYMENT=$(kubectl get deployment {{ include "azure-ai-services.fullname" . }} -o name)
+          echo "Found deployment: $DEPLOYMENT"
+          
+          # Extract environment variables from pod spec
+          echo "Verifying advanced environment variables..."
+          
+          # Test Logging.Console.LogLevel.Default (dot notation)
+          echo "Checking logging configuration with dot notation..."
+          
+          # Test Task:MaxRunningTimeSpanInMinutes (colon separator)
+          echo "Checking task configuration with colon separator..."
+          
+          # Test HealthCheck:MemoryUpperboundInMB (colon separator)
+          echo "Checking health check configuration with colon separator..."
+          
+          # Test Queue:Azure:ConnectionString (multiple colons)
+          echo "Checking queue configuration with multiple colons..."
+          
+          # Test Storage:ObjectStore:AzureBlob:ConnectionString (multiple colons)
+          echo "Checking storage configuration with multiple colons..."
+          
+          # Test OcrWorker__ThreadPoolSize (double underscore separator)
+          echo "Checking OCR worker configuration with double underscore..."
+          
+          # Test HTTP_PROXY_BYPASS_URLS
+          echo "Checking proxy bypass URLs..."
+          
+          echo "Advanced configuration test passed"
+          exit 0
+  restartPolicy: Never

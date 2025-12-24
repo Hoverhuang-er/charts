@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: helm-lint-all
+        name: Helm Lint All Charts
+        entry: sh -c 'find . -type f -name "Chart.yaml" -exec sh -c "cd \"$(dirname \"$1\")\" && helm lint" _ {} \;'
+        language: system
+        pass_filenames: false
+        files: (\.yaml$|Chart\.yaml)

@@ -60,3 +60,28 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Convert environment variable name to Kubernetes-safe format
+Checks if name contains special characters (., :, /, -) and wraps in quotes if needed
+This preserves Azure container compatibility while satisfying Kubernetes requirements
+*/}}
+{{- define "azure-ai-services.envName" -}}
+{{- $name := . -}}
+{{- if or (contains "." $name) (contains ":" $name) (contains "/" $name) (contains "-" $name) -}}
+{{- printf "\"%s\"" $name -}}
+{{- else -}}
+{{- $name -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+Generate mount path environment variable name with configurable separator
+Supports: _, __, ., - (with auto-quoting for invalid Kubernetes characters)
+*/}}
+{{- define "azure-ai-services.mountEnvName" -}}
+{{- $suffix := .suffix -}}
+{{- $separator := .separator | default "__" -}}
+{{- $name := printf "Mounts%s%s" $separator $suffix -}}
+{{- include "azure-ai-services.envName" $name -}}
+{{- end }}
