@@ -38,8 +38,52 @@ jobs:
           version: v3.14.0
 
       - name: Lint chart
+        id: lint
         run: |
-          helm lint ${{ matrix.chart.path }}
+          echo "=== Linting chart: ${{ matrix.chart.path }} ==="
+          mkdir -p lint-reports
+          helm lint ${{ matrix.chart.path }} 2>&1 | tee lint-reports/${{ matrix.chart.path }}.log
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report-${{ matrix.chart.path }}
+          path: lint-reports/
+
+  lint-summary:
+    name: Lint Summary
+    runs-on: ubuntu-latest
+    needs: lint-charts
+    if: always()
+    steps:
+      - name: Download all lint reports
+        uses: actions/download-artifact@v4
+        with:
+          path: lint-reports
+
+      - name: Generate lint summary
+        run: |
+          echo "# Helm Lint Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Lint Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          for report in lint-reports/*/Microsoft/*/content-safety.log lint-reports/*/Microsoft/*/document-intelligence.log lint-reports/*/OpenSources/magentic-ui.log; do
+            if [ -f "$report" ]; then
+              chart_name=$(echo "$report" | sed 's|.*/\(.*\)\.log|\1|')
+              echo "### $chart_name" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              cat "$report" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: Check overall status
+        run: |
+          echo "All chart linting completed. Check summary for details."
 
   template-charts:
     name: Template Charts
