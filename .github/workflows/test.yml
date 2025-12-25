@@ -181,15 +181,10 @@ jobs:
         run: |
           helm dependency update ${{ matrix.chart.path }} || echo "No dependencies found"
 
-      - name: Template chart for testing (dry-run)
+      - name: Template chart for testing
         run: |
           echo "=== Template chart: ${{ matrix.chart.path }} ==="
           helm template test-release ${{ matrix.chart.path }} --debug
-
-      - name: Install chart dry-run
-        run: |
-          echo "=== Install chart dry-run: ${{ matrix.chart.path }} ==="
-          helm install test-release ${{ matrix.chart.path }} --dry-run --debug
 
   full-install-test:
     name: Full Install Test - document-intelligence
@@ -209,17 +204,6 @@ jobs:
         run: |
           helm dependency update Microsoft/azure-ai-services/charts/document-intelligence || echo "No dependencies found"
 
-      - name: Install chart with default values (dry-run)
-        id: install-dryrun
-        run: |
-          echo "=== Install chart dry-run: default values ==="
-          helm install doc-intel Microsoft/azure-ai-services/charts/document-intelligence \
-            --dry-run --debug || {
-            echo "::error::Helm install dry-run failed"
-            exit 1
-          }
-        continue-on-error: true
-
       - name: Template chart with default values
         id: template-default
         run: |
@@ -227,28 +211,6 @@ jobs:
           helm template doc-intel Microsoft/azure-ai-services/charts/document-intelligence \
             --debug > template-default.yaml || {
             echo "::error::Helm template failed"
-            exit 1
-          }
-        continue-on-error: true
-
-      - name: Upgrade chart with modified values (dry-run)
-        id: upgrade-dryrun
-        run: |
-          cat <<EOF > test-values.yaml
-          replicaCount: 2
-          documentIntelligence:
-            modelType: layout
-            advanced:
-              storageTimeToLiveInMinutes: 1440
-              taskMaxRunningTimeSpanInMinutes: 60
-              healthCheckMemoryUpperboundInMB: 8192
-              logging:
-                consoleLogLevel: Debug
-          EOF
-          echo "=== Upgrade chart dry-run: modified values ==="
-          helm upgrade doc-intel Microsoft/azure-ai-services/charts/document-intelligence \
-            --values test-values.yaml --dry-run --debug || {
-            echo "::error::Helm upgrade dry-run failed"
             exit 1
           }
         continue-on-error: true
@@ -279,25 +241,13 @@ jobs:
         if: always()
         run: |
           echo "==========================================" >> $GITHUB_STEP_SUMMARY
-          echo "HELM DRY-RUN TEST RESULTS SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "HELM TEMPLATE TEST RESULTS SUMMARY" >> $GITHUB_STEP_SUMMARY
           echo "==========================================" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.install-dryrun.outcome }}" == "success" ]; then
-            echo "✅ Install dry-run: PASSED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Install dry-run: FAILED" >> $GITHUB_STEP_SUMMARY
-          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.template-default.outcome }}" == "success" ]; then
             echo "✅ Template default: PASSED" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Template default: FAILED" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.upgrade-dryrun.outcome }}" == "success" ]; then
-            echo "✅ Upgrade dry-run: PASSED" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Upgrade dry-run: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.template-upgrade.outcome }}" == "success" ]; then

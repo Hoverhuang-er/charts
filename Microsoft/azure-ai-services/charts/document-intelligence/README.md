@@ -17,6 +17,20 @@ Azure AI Document Intelligence containers allow you to run Document Intelligence
 - Sufficient cluster resources (minimum 8 cores, 16GB memory per pod)
 - Persistent storage provisioner (for license and logs)
 
+## Known Limitations
+
+**We sincerely apologize for a limitation in this chart regarding special character compatibility.**
+
+Due to Kubernetes environment variable naming restrictions and the configuration approach used in this chart, there are known limitations when working with certain special characters in environment variable separators:
+
+1. **Colon (`:`) is NOT supported** as a configurable separator - this is a Kubernetes-enforced limitation that we cannot work around in the current implementation
+2. The chart uses double underscore (`__`) as the default separator for maximum compatibility
+3. While dot (`.`), hyphen (`-`), and single underscore (`_`) are technically supported, they may cause issues in certain Kubernetes versions or environments
+
+We understand this limitation may cause inconvenience when migrating from configurations that use colon separators. We are working on improving this in future versions to provide better flexibility while maintaining Kubernetes compatibility. If you have specific use cases that require alternative separator characters, please open an issue so we can understand your needs better.
+
+For detailed configuration options and workarounds, please see the [Environment Variable Separator Configuration](#environment-variable-separator-configuration) section below.
+
 ## Supported Models
 
 This chart supports the following Document Intelligence models:
