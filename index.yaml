@@ -1,0 +1,50 @@
+apiVersion: v1
+entries:
+  azure-ai-services:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2025-12-25T03:06:17.206066079Z"
+    description: A Helm chart for Kubernetes
+    digest: b1567afedf278aec8c6ec95023a714aeee241944d547da42b08078c6a1b02c96
+    name: azure-ai-services
+    type: application
+    urls:
+    - https://hoverhuang-er.github.io/charts/azure-ai-services-0.1.0.tgz
+    version: 0.1.0
+  document-intelligence:
+  - apiVersion: v2
+    appVersion: "4.0"
+    created: "2025-12-25T03:06:17.2074345Z"
+    description: Azure AI Document Intelligence container for disconnected (offline)
+      environments
+    digest: 56552a557e329112e4ce867f88a5ae41ed3631a39079165bdab5f05972da3f4d
+    name: document-intelligence
+    type: application
+    urls:
+    - https://hoverhuang-er.github.io/charts/document-intelligence-0.2.3.tgz
+    version: 0.2.3
+  magentic-ui:
+  - apiVersion: v2
+    appVersion: 0.1.2
+    created: "2025-12-25T03:06:17.20814089Z"
+    description: A human-centered multi-agent web automation system powered by AutoGen
+    digest: f01e12c34bc28aad254d6e2eedc2965679ab80462ec8eed979e7d47d6affcfe2
+    home: https://github.com/microsoft/magentic-ui
+    keywords:
+    - ai
+    - automation
+    - autogen
+    - browser-automation
+    - multi-agent
+    - web-agent
+    maintainers:
+    - name: Microsoft Research
+      url: https://www.microsoft.com/en-us/research/
+    name: magentic-ui
+    sources:
+    - https://github.com/microsoft/magentic-ui
+    type: application
+    urls:
+    - https://hoverhuang-er.github.io/charts/magentic-ui-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-12-25T03:06:17.205543775Z"
